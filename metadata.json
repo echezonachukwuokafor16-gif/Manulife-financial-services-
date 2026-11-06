@@ -1,0 +1,6 @@
+{
+  "name": "Verdant Crest Capital",
+  "description": "Modern institutional financial services, flexible credit solutions, interactive loan calculator, and secure applicant & administrator underwriting portal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
