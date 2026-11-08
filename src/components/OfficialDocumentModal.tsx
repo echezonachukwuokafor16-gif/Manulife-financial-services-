@@ -262,14 +262,10 @@ export const OfficialDocumentModal: React.FC<OfficialDocumentModalProps> = ({
                     <div>
                       <span className="text-slate-500 block text-[10px] uppercase font-semibold">Designated Escrow Depository & Rail:</span>
                       <strong className="text-slate-900 text-sm">
-                        {application.commitment?.paymentMethod?.includes('USDT') 
-                          ? 'BitGo Trust Company Inc. / Fireblocks Regulated Custody' 
-                          : 'Barclays Private Clients Escrow Custody'}
+                        BitGo Trust Company Inc. / Fireblocks Regulated Custody
                       </strong>
                       <div className="text-slate-600 text-[11px]">
-                        {application.commitment?.paymentMethod?.includes('USDT') 
-                          ? `USDT Digital Asset Protocol · Parity: 1.00 USDT = $1.00 USD (Charter #D-8841)` 
-                          : 'Segregated Client Trust Account #8841-ESCR'}
+                        USDT Digital Asset Protocol · Parity: 1.00 USDT = $1.00 USD (Charter #D-8841)
                       </div>
                     </div>
                   </div>

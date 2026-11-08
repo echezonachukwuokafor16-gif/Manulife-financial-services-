@@ -6,12 +6,14 @@
 import React, { useState } from 'react';
 import { Calculator, AlertCircle, ArrowRight, Table, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
 import { calculateLoanRepayment, formatCurrency } from '../lib/calculator';
+import { useLanguage } from '../context/LanguageContext';
 
 interface LoanCalculatorSectionProps {
   onApplyWithTerms: (amount: number, term: 12 | 24 | 36 | 48) => void;
 }
 
 export const LoanCalculatorSection: React.FC<LoanCalculatorSectionProps> = ({ onApplyWithTerms }) => {
+  const { t } = useLanguage();
   const [amount, setAmount] = useState<number>(120000);
   const [interestRate, setInterestRate] = useState<number>(5.75);
   const [periodMonths, setPeriodMonths] = useState<12 | 24 | 36 | 48>(36);
@@ -33,10 +35,10 @@ export const LoanCalculatorSection: React.FC<LoanCalculatorSectionProps> = ({ on
             <span>Interactive Financial Planning</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">
-            Institutional Loan Calculator
+            {t('calculator.title', 'Institutional Loan Calculator')}
           </h2>
           <p className="text-base text-slate-600 leading-relaxed">
-            Model your capital requirements, test different amortization terms, and examine expected monthly commitments with full fee transparency.
+            {t('calculator.subtitle', 'Model your capital requirements, test different amortization terms, and examine expected monthly commitments with full fee transparency.')}
           </p>
         </div>
 
@@ -284,7 +286,7 @@ export const LoanCalculatorSection: React.FC<LoanCalculatorSectionProps> = ({ on
                 onClick={() => onApplyWithTerms(amount, periodMonths)}
                 className="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm tracking-wide uppercase rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
               >
-                <span>Apply with These Terms</span>
+                <span>{t('calculator.applyNow', 'Apply with These Terms')}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

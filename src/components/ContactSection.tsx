@@ -4,11 +4,14 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Mail, Phone, MapPin, Send, CheckCircle2, Building, Clock, ShieldCheck, UserCheck } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle2, Building, Clock, ShieldCheck, UserCheck, ArrowRight } from 'lucide-react';
 import { CompanyContactSettings } from '../types';
 import { storage } from '../lib/storage';
+import { WhatsAppFilledIcon, TelegramFilledIcon } from './SocialSupportIcons';
+import { useLanguage } from '../context/LanguageContext';
 
 export const ContactSection: React.FC = () => {
+  const { t } = useLanguage();
   const [formSubmitted, setFormSubmitted] = useState<boolean>(false);
   const [contactSettings, setContactSettings] = useState<CompanyContactSettings | null>(null);
   const [formData, setFormData] = useState({
@@ -54,10 +57,10 @@ export const ContactSection: React.FC = () => {
             <span>Client Services & Private Advisory</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">
-            Connect with Our Underwriting Advisory Team
+            {t('contact.title', 'Connect with Our Underwriting Advisory Team')}
           </h2>
           <p className="text-base text-slate-600 leading-relaxed">
-            Speak directly with a senior credit officer or submit a confidential inquiry regarding custom loan structuring, cross-border collateral, or corporate facility syndication.
+            {t('contact.subtitle', 'Speak directly with a senior credit officer or submit a confidential inquiry regarding custom loan structuring, cross-border collateral, or corporate facility syndication.')}
           </p>
         </div>
 
@@ -228,6 +231,71 @@ export const ContactSection: React.FC = () => {
                 <span className="text-[11px] text-slate-400 font-mono">
                   {supportEmail}
                 </span>
+              </div>
+            </div>
+
+            {/* WhatsApp & Telegram Instant Support Desk Card */}
+            <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 text-white rounded-2xl p-6 border border-emerald-800/60 shadow-lg space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Instant Messaging & Encrypted Channels</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Live Underwriters Online
+                </span>
+              </div>
+
+              <div>
+                <h4 className="text-base font-bold text-white">
+                  WhatsApp & Telegram Borrower Concierge
+                </h4>
+                <p className="text-xs text-slate-300 mt-1">
+                  Connect directly with senior credit committee advisors and underwriting officers on verified institutional encrypted channels for rapid document review and real-time guidance.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                {/* WhatsApp Action Button */}
+                <a
+                  href={contactSettings?.whatsappLink || `https://wa.me/${(contactSettings?.whatsappNumber || '+447458198234').replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3.5 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 rounded-xl transition-all flex items-center gap-3 group shadow-sm hover:border-emerald-400"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-[#25D366] text-white flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform">
+                    <WhatsAppFilledIcon className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] uppercase font-bold text-emerald-300 tracking-wider">WhatsApp Business</div>
+                    <div className="text-xs font-mono font-bold text-white truncate">{contactSettings?.whatsappNumber || '+44 7458 198234'}</div>
+                    <div className="text-[10px] text-emerald-400/90 flex items-center gap-1 mt-0.5 font-medium">
+                      <span>Chat with Underwriter</span>
+                      <ArrowRight className="w-2.5 h-2.5" />
+                    </div>
+                  </div>
+                </a>
+
+                {/* Telegram Action Button */}
+                <a
+                  href={contactSettings?.telegramLink || `https://t.me/${(contactSettings?.telegramUsername || '@ManulifeFinancialSupport').replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-3.5 bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/40 rounded-xl transition-all flex items-center gap-3 group shadow-sm hover:border-sky-400"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-[#229ED9] text-white flex items-center justify-center shadow-md shrink-0 group-hover:scale-105 transition-transform">
+                    <TelegramFilledIcon className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] uppercase font-bold text-sky-300 tracking-wider">Telegram Official</div>
+                    <div className="text-xs font-mono font-bold text-white truncate">{contactSettings?.telegramUsername || '@ManulifeFinancialSupport'}</div>
+                    <div className="text-[10px] text-sky-400/90 flex items-center gap-1 mt-0.5 font-medium">
+                      <span>Open Telegram Channel</span>
+                      <ArrowRight className="w-2.5 h-2.5" />
+                    </div>
+                  </div>
+                </a>
               </div>
             </div>
 

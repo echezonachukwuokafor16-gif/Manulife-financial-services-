@@ -5,8 +5,11 @@
 
 import React from 'react';
 import { ShieldAlert, CheckCircle, Scale, Lock } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export const AntiAdvanceFeeBanner: React.FC = () => {
+  const { t } = useLanguage();
+
   return (
     <section className="py-12 bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -17,15 +20,15 @@ export const AntiAdvanceFeeBanner: React.FC = () => {
             <div className="lg:col-span-8">
               <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">
                 <ShieldAlert className="w-4 h-4 text-emerald-400" />
-                <span>Fair Lending & Consumer Protection Charter</span>
+                <span>{t('antiAdvance.badge', 'Zero Advance Processing Fee Mandate')}</span>
               </div>
 
               <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-3">
-                Zero Upfront Payment Guarantee
+                {t('antiAdvance.title', 'Zero Upfront Payment Guarantee')}
               </h3>
 
               <p className="text-sm text-slate-300 leading-relaxed mb-6">
-                Manulife Financial Services adheres strictly to international ethical lending standards and regulatory guidance. <strong className="text-white font-semibold">We never request or collect upfront wire fees, insurance deposits, or clearance advances as a condition for releasing or disbursing an approved loan.</strong>
+                {t('antiAdvance.desc', 'Manulife Financial Services adheres strictly to international ethical lending standards and regulatory guidance. We never request or collect upfront wire fees, insurance deposits, or clearance advances as a condition for releasing or disbursing an approved loan.')}
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">

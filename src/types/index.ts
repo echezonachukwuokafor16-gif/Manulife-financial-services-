@@ -269,6 +269,12 @@ export interface CompanyContactSettings {
   supportEmail: string;
   directLiaisonEmail: string;
   supportPhone: string;
+  whatsappNumber?: string;
+  whatsappLink?: string;
+  whatsappEnabled?: boolean;
+  telegramUsername?: string;
+  telegramLink?: string;
+  telegramEnabled?: boolean;
   londonEmail: string;
   zurichEmail: string;
   nyEmail: string;
@@ -276,4 +282,82 @@ export interface CompanyContactSettings {
   updatedAt: string;
   updatedBy: string;
 }
+
+export interface EmailNotificationRecord {
+  id: string;
+  applicationId: string;
+  recipientEmail: string;
+  recipientName: string;
+  ccEmail?: string;
+  fromEmail: string;
+  fromName: string;
+  subject: string;
+  previewText?: string;
+  htmlContent?: string;
+  plainTextContent?: string;
+  message?: string;
+  badgeText?: string;
+  trigger?: string;
+  triggerEvent: 
+    | 'application_submitted'
+    | 'status_changed'
+    | 'usdt_deposit_received'
+    | 'usdt_deposit_verified'
+    | 'documents_required'
+    | 'face_kyc_completed'
+    | 'officer_message'
+    | 'system_test';
+  status: 'delivered' | 'sent' | 'queued';
+  sentAt: string;
+  deliveredAt: string;
+  timestamp?: string;
+  openedAt?: string;
+  details?: { label: string; value: string }[];
+}
+
+export interface EmailDispatchSettings {
+  enabled: boolean;
+  senderName: string;
+  senderDisplayName?: string;
+  senderEmail: string;
+  liaisonEmail: string;
+  directLiaisonEmail?: string;
+  notifyOnNewApplication: boolean;
+  notifyOnApplicationSubmitted?: boolean;
+  notifyOnUsdtDeposit: boolean;
+  notifyOnUsdtReceived?: boolean;
+  notifyOnUsdtVerified?: boolean;
+  notifyOnStatusChange: boolean;
+  notifyOnFaceKyc: boolean;
+  notifyOnDocumentUpload: boolean;
+  notifyOnDocumentsRequired?: boolean;
+  notifyOnOfficerMessage: boolean;
+  smtpRelayHost: string;
+  encryption: 'TLS' | 'SSL';
+  updatedAt: string;
+  updatedBy: string;
+}
+
+export type SupportedLanguage = 
+  | 'en' // English
+  | 'es' // Spanish
+  | 'fr' // French
+  | 'de' // German
+  | 'zh' // Chinese (Simplified)
+  | 'ar' // Arabic
+  | 'pt' // Portuguese
+  | 'ja' // Japanese
+  | 'it' // Italian
+  | 'ru' // Russian
+  | 'nl' // Dutch
+  | 'tr'; // Turkish
+
+export interface LanguageOption {
+  code: SupportedLanguage;
+  name: string;
+  nativeName: string;
+  flag: string;
+  dir: 'ltr' | 'rtl';
+}
+
 

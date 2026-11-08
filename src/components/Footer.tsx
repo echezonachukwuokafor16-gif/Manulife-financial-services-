@@ -4,9 +4,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Lock, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, Phone, MapPin, ArrowRight, Globe } from 'lucide-react';
 import { CompanyContactSettings } from '../types';
 import { storage } from '../lib/storage';
+import { WhatsAppFilledIcon, TelegramFilledIcon } from './SocialSupportIcons';
+import { useLanguage } from '../context/LanguageContext';
+import { LanguageSelector } from './LanguageSelector';
 
 interface FooterProps {
   onNavigate: (view: 'home' | 'apply' | 'applicant-portal' | 'admin-portal') => void;
@@ -15,6 +18,7 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenApply, onOpenLegal }) => {
+  const { t } = useLanguage();
   const [contactSettings, setContactSettings] = useState<CompanyContactSettings | null>(null);
 
   useEffect(() => {
@@ -90,6 +94,27 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenApply, onOpenL
                 <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span className="text-slate-400">Priority Hotline:</span>
                 <span className="text-slate-300 font-mono">{phone}</span>
+              </div>
+              <div className="flex items-center gap-3 pt-1 text-[10px]">
+                <a
+                  href={contactSettings?.whatsappLink || `https://wa.me/${(contactSettings?.whatsappNumber || '+447458198234').replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[#25D366] hover:text-[#38e07a] font-semibold"
+                >
+                  <WhatsAppFilledIcon className="w-3 h-3" />
+                  <span>WhatsApp ({contactSettings?.whatsappNumber || '+44 7458 198234'})</span>
+                </a>
+                <span>·</span>
+                <a
+                  href={contactSettings?.telegramLink || `https://t.me/${(contactSettings?.telegramUsername || '@ManulifeFinancialSupport').replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[#229ED9] hover:text-[#3bb4ee] font-semibold"
+                >
+                  <TelegramFilledIcon className="w-3 h-3" />
+                  <span>Telegram ({contactSettings?.telegramUsername || '@ManulifeFinancialSupport'})</span>
+                </a>
               </div>
             </div>
           </div>
@@ -227,11 +252,18 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenApply, onOpenL
       {/* Fair Lending & Anti-Fraud Legal Bottom Bar */}
       <div className="border-t border-slate-900 bg-black/40 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
-          <div>
-            © {new Date().getFullYear()} Manulife Financial Services Limited. All rights reserved. Registered financial institution.
+          <div className="flex items-center gap-3 flex-wrap">
+            <span>
+              © {new Date().getFullYear()} Manulife Financial Services Limited. {t('footer.rightsReserved', 'All rights reserved.')}
+            </span>
+            <span className="hidden sm:inline text-slate-700">·</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-400">Language:</span>
+              <LanguageSelector variant="header" />
+            </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 flex-wrap">
             <button
               onClick={() => onOpenLegal('privacy')}
               className="hover:text-slate-300 transition-colors"

@@ -34,12 +34,23 @@ export const USDTInformationSection: React.FC<USDTInformationSectionProps> = ({
   const [copiedAddress, setCopiedAddress] = useState<boolean>(false);
   const [showQr, setShowQr] = useState<boolean>(false);
 
+  // Sync selected network when admin changes active network or config
+  React.useEffect(() => {
+    if (usdtConfig.activeNetworkId) {
+      setSelectedNetworkId(usdtConfig.activeNetworkId);
+    }
+  }, [usdtConfig.activeNetworkId, usdtConfig.supportedNetworks]);
+
   // TxHash submission state for applicant
   const [txHashInput, setTxHashInput] = useState<string>('');
   const [senderWalletInput, setSenderWalletInput] = useState<string>('');
   const [submittedTxSuccess, setSubmittedTxSuccess] = useState<boolean>(false);
 
-  const activeNetwork = usdtConfig.supportedNetworks.find((n) => n.id === selectedNetworkId) || usdtConfig.supportedNetworks[0];
+  const activeNetwork = 
+    usdtConfig.supportedNetworks.find((n) => n.id === selectedNetworkId) || 
+    usdtConfig.supportedNetworks.find((n) => n.id === usdtConfig.activeNetworkId) || 
+    usdtConfig.supportedNetworks.find((n) => n.active) || 
+    usdtConfig.supportedNetworks[0];
   const equivalentUsdt = Math.round(commitmentAmount / (usdtConfig.exchangeRateUsd || 1.0));
 
   const handleCopyAddress = () => {
@@ -71,7 +82,7 @@ export const USDTInformationSection: React.FC<USDTInformationSectionProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-900">
-                Optional Cryptocurrency Settlement Rail
+                Designated Cryptocurrency Settlement Rail (Exclusive Earnest Rail)
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
                 Regulated Custody

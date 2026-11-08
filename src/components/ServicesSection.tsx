@@ -6,12 +6,15 @@
 import React from 'react';
 import { ArrowRight, Building2, User, Briefcase, CalendarCheck, Check, Shield } from 'lucide-react';
 import { LoanPurpose } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ServicesSectionProps {
   onSelectService: (purpose: LoanPurpose) => void;
 }
 
 export const ServicesSection: React.FC<ServicesSectionProps> = ({ onSelectService }) => {
+  const { t } = useLanguage();
+
   return (
     <section id="services" className="py-20 bg-slate-50 border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -24,10 +27,10 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ onSelectServic
             <span>Transparent Fixed APR</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">
-            Financial Services Engineered for Growth & Capital Preservation.
+            {t('services.title', 'Financial Services Engineered for Growth & Capital Preservation.')}
           </h2>
           <p className="text-base text-slate-600 leading-relaxed">
-            Whether securing prime real estate, modernizing commercial infrastructure, or structuring personal liquidity, our bespoke credit products offer rapid disbursement, flexible amortization, and institutional terms.
+            {t('services.subtitle', 'Whether securing prime real estate, modernizing commercial infrastructure, or structuring personal liquidity, our bespoke credit products offer rapid disbursement, flexible amortization, and institutional terms.')}
           </p>
         </div>
 

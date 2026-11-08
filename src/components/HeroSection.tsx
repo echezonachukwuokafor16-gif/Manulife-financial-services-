@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, ShieldCheck, CheckCircle2, Calculator, Clock, Lock } from 'lucide-react';
 import { calculateLoanRepayment, formatCurrency } from '../lib/calculator';
+import { useLanguage } from '../context/LanguageContext';
 
 interface HeroSectionProps {
   onApplyClick: (prefilledAmount?: number, prefilledTerm?: 12 | 24 | 36 | 48) => void;
@@ -16,6 +17,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onApplyClick,
   onExploreCalculator,
 }) => {
+  const { t } = useLanguage();
   const [quickAmount, setQuickAmount] = useState<number>(75000);
   const [quickTerm, setQuickTerm] = useState<12 | 24 | 36 | 48>(36);
 
@@ -54,11 +56,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.12] mb-6 font-sans">
-              Precision Institutional Lending for Ambitious Milestones.
+              {t('hero.headlinePart1', 'Precision Institutional Lending for')}{' '}
+              <span className="text-emerald-800">{t('hero.headlineHighlight', 'Ambitious Milestones')}</span>.
             </h1>
 
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mb-8">
-              Manulife Financial Services provides structured personal loans, luxury residential mortgages, and commercial financing up to $1,500,000. Benefit from accelerated 24-hour committee review, competitive fixed rates, and a strict no-advance-fee guarantee.
+              {t('hero.subhead', 'Manulife Financial Services provides structured personal loans, luxury residential mortgages, and commercial financing up to $5,000,000. Benefit from accelerated 24-hour committee review, competitive fixed rates, and a strict no-advance-fee guarantee.')}
             </p>
 
             {/* CTAs */}
@@ -67,7 +70,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={() => onApplyClick(quickAmount, quickTerm)}
                 className="inline-flex items-center justify-center gap-2 px-7 py-3.5 text-base font-semibold text-white bg-emerald-800 rounded-lg hover:bg-emerald-900 active:bg-emerald-950 transition-all shadow-sm hover:shadow whitespace-nowrap focus-visible:ring-2 focus-visible:ring-emerald-700"
               >
-                <span>APPLY FOR A LOAN</span>
+                <span>{t('hero.primaryCta', 'APPLY FOR A LOAN')}</span>
                 <ArrowRight className="w-5 h-5" />
               </button>
 
@@ -76,7 +79,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-slate-800 bg-slate-100 rounded-lg hover:bg-slate-200 active:bg-slate-300 transition-colors whitespace-nowrap"
               >
                 <Calculator className="w-4 h-4 text-emerald-800" />
-                <span>Open Full Calculator</span>
+                <span>{t('hero.secondaryCta', 'Open Full Calculator')}</span>
               </button>
             </div>
 

