@@ -10,6 +10,7 @@ import { ServicesSection } from './components/ServicesSection';
 import { LoanCalculatorSection } from './components/LoanCalculatorSection';
 import { AntiAdvanceFeeBanner } from './components/AntiAdvanceFeeBanner';
 import { EligibilitySection } from './components/EligibilitySection';
+import { TestimonialsSection } from './components/TestimonialsSection';
 import { FAQSection } from './components/FAQSection';
 import { ContactSection } from './components/ContactSection';
 import { Footer } from './components/Footer';
@@ -194,6 +195,8 @@ export default function App() {
               <EligibilitySection
                 onOpenApply={() => handleOpenApply(100000, 36)}
               />
+
+              <TestimonialsSection />
 
               <FAQSection />
 

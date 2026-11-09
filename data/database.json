@@ -1,0 +1,172 @@
+{
+  "applications": [
+    {
+      "id": "MFS-2026-8194",
+      "createdAt": "2026-11-06T09:36:39.359Z",
+      "updatedAt": "2026-11-08T09:36:39.359Z",
+      "status": "approved",
+      "personal": {
+        "fullName": "Eleanor Vance-Sterling",
+        "dob": "1984-06-18",
+        "gender": "Female",
+        "nationality": "British",
+        "residenceCountry": "United Kingdom",
+        "residentialAddress": "42 Kensington Palace Gardens, London, W8 4QQ",
+        "phoneNumber": "+44 20 7946 0912",
+        "email": "e.vance@sterling-holdings.co.uk",
+        "photoUrl": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80"
+      },
+      "employment": {
+        "employerName": "Sterling Horizon Capital Ltd",
+        "occupation": "Managing Director & Partner",
+        "employmentDuration": "7 years 4 months",
+        "employmentType": "Executive / Board Director",
+        "monthlyIncome": 24500,
+        "additionalIncome": 6200
+      },
+      "loan": {
+        "requestedAmount": 350000,
+        "purpose": "Commercial & Business Expansion",
+        "repaymentPeriodMonths": 36,
+        "preferredPaymentMethod": "USDT Cryptocurrency Settlement (ERC-20 / TRC-20)"
+      },
+      "financial": {
+        "existingLoans": 45000,
+        "monthlyObligations": 2100,
+        "monthlyRent": 3800,
+        "otherCommitments": 950
+      },
+      "commitment": {
+        "requestedLoanAmount": 350000,
+        "commitmentRatePct": 10,
+        "commitmentAmount": 35000,
+        "purposeDescription": "Earnest borrower liquidity allocation held in segregated client escrow.",
+        "refundabilityType": "100% Credited to Principal upon Closing or Refunded if Underwriting Declines",
+        "termsAccepted": true,
+        "acknowledgedNoGuarantee": true,
+        "receiptNumber": "RCPT-2026-8194-C-CRYPTO",
+        "paymentMethod": "USDT Cryptocurrency Settlement (ERC-20 / TRC-20)",
+        "paymentStatus": "Held in Regulated Escrow",
+        "disclosedAt": "2026-11-06T09:36:39.359Z",
+        "escrowCustodian": "BitGo Trust Company Inc. / Fireblocks Regulated MPC (Charter #D-8841)"
+      },
+      "declaration": {
+        "confirmedAccurate": true,
+        "acceptedDisclosures": true,
+        "signatureDataUrl": "Eleanor Vance-Sterling",
+        "signatureType": "type",
+        "signedAt": "2026-11-06T09:36:39.359Z"
+      },
+      "underwriting": {
+        "riskTier": "Tier 1 (Prime)",
+        "approvedAmount": 350000,
+        "approvedRate": 5.45,
+        "officerNotes": "High liquidity coverage ratio. Authorized by Credit Committee.",
+        "reviewedBy": "A. Montgomery (Credit Committee Underwriter)",
+        "decisionDate": "2026-11-08T09:36:39.359Z",
+        "disbursementReference": "WIRE-2026-8194"
+      },
+      "documents": []
+    },
+    {
+      "id": "MFS-2026-6281",
+      "createdAt": "2026-11-08T09:36:39.359Z",
+      "updatedAt": "2026-11-09T05:36:39.359Z",
+      "status": "pending_review",
+      "personal": {
+        "fullName": "Dr. Sofia Reyes",
+        "dob": "1988-11-23",
+        "gender": "Female",
+        "nationality": "Spanish",
+        "residenceCountry": "Spain",
+        "residentialAddress": "Paseo de la Castellana 112, Madrid, 28046",
+        "phoneNumber": "+34 91 582 0100",
+        "email": "sofia.reyes@clinica-biomed.es",
+        "photoUrl": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80"
+      },
+      "employment": {
+        "employerName": "Centro Médico Especializado",
+        "occupation": "Surgeon / Clinical Partner",
+        "employmentDuration": "5 years",
+        "employmentType": "Full-Time Permanent",
+        "monthlyIncome": 13500,
+        "additionalIncome": 1800
+      },
+      "loan": {
+        "requestedAmount": 95000,
+        "purpose": "Equipment, Machinery & Technology",
+        "repaymentPeriodMonths": 24,
+        "preferredPaymentMethod": "USDT Cryptocurrency Settlement (ERC-20 / TRC-20)"
+      },
+      "financial": {
+        "existingLoans": 12000,
+        "monthlyObligations": 850,
+        "monthlyRent": 2100,
+        "otherCommitments": 400
+      },
+      "commitment": {
+        "requestedLoanAmount": 95000,
+        "commitmentRatePct": 10,
+        "commitmentAmount": 9500,
+        "purposeDescription": "Equipment acquisition commitment deposit held in designated escrow account.",
+        "refundabilityType": "100% Credited to Principal upon Closing or Refunded if Underwriting Declines",
+        "termsAccepted": true,
+        "acknowledgedNoGuarantee": true,
+        "receiptNumber": "RCPT-2026-6281-C-CRYPTO",
+        "paymentMethod": "USDT Cryptocurrency Settlement (ERC-20 / TRC-20)",
+        "paymentStatus": "Held in Regulated Escrow",
+        "disclosedAt": "2026-11-08T09:36:39.359Z",
+        "escrowCustodian": "BitGo Trust Company Inc. / Fireblocks Regulated MPC (Charter #D-8841)"
+      },
+      "declaration": {
+        "confirmedAccurate": true,
+        "acceptedDisclosures": true,
+        "signatureDataUrl": "Dr. Sofia Reyes",
+        "signatureType": "type",
+        "signedAt": "2026-11-08T09:36:39.359Z"
+      },
+      "underwriting": {
+        "riskTier": "Tier 2 (Near-Prime)",
+        "officerNotes": "New registration received. Underwriting preliminary audit pending.",
+        "reviewedBy": "A. Montgomery (Credit Committee Underwriter)"
+      },
+      "documents": []
+    }
+  ],
+  "credentials": {
+    "admin@manulife-financial.com": "admin2026",
+    "e.vance@sterling-holdings.co.uk": "Client2026!",
+    "sofia.reyes@clinica-biomed.es": "Client2026!",
+    "victoria.fox@sterlingholdings.co.uk": "SecurePassword2026!"
+  },
+  "emailLogs": [
+    {
+      "id": "eml-1794217014616",
+      "applicationId": "MFS-2026-4063",
+      "recipientEmail": "victoria.fox@sterlingholdings.co.uk",
+      "recipientName": "Victoria Sterling-Fox",
+      "ccEmail": "echezonachukwuokafor16@gmail.com",
+      "subject": "Welcome to Manulife Financial Services · Account Dossier #MFS-2026-4063",
+      "triggerEvent": "user_registration",
+      "status": "delivered",
+      "provider": "server_smtp_relay",
+      "sentAt": "2026-11-09T09:36:54.589Z",
+      "adminNotificationResult": {
+        "success": true,
+        "provider": "server_smtp_relay",
+        "messageId": "relay-1794217014616-vn453",
+        "details": {
+          "status": "queued_and_recorded",
+          "instruction": "To send live emails to external inboxes, add RESEND_API_KEY or SENDGRID_API_KEY to your environment variables."
+        }
+      }
+    }
+  ],
+  "testimonials": [],
+  "resetCodes": {
+    "victoria.fox@sterlingholdings.co.uk": {
+      "code": "135731",
+      "expiresAt": 1794217925932
+    }
+  }
+}

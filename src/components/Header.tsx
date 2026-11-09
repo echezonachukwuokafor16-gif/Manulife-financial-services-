@@ -170,6 +170,16 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={() => {
                 onNavigate('home');
+                const el = document.getElementById('testimonials');
+                el?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="hover:text-emerald-800 transition-colors whitespace-nowrap shrink-0"
+            >
+              {t('header.testimonials', 'Case Studies')}
+            </button>
+            <button
+              onClick={() => {
+                onNavigate('home');
                 const el = document.getElementById('faq');
                 el?.scrollIntoView({ behavior: 'smooth' });
               }}

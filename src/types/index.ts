@@ -360,4 +360,21 @@ export interface LanguageOption {
   dir: 'ltr' | 'rtl';
 }
 
+export interface TestimonialItem {
+  id: string;
+  authorName: string;
+  role: string;
+  company: string;
+  location: string;
+  facilityAmount: number;
+  facilityType: string;
+  sector: string;
+  quote: string;
+  turnaroundTime: string;
+  closingDate: string;
+  verifiedAuditDesk: string;
+  avatarUrl?: string;
+  rating?: number;
+}
+
 

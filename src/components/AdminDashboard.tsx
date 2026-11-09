@@ -7,9 +7,10 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, Lock, Unlock, Search, Filter, Eye, EyeOff, CheckCircle2, 
   XCircle, AlertTriangle, FileText, Send, RefreshCw, Database, 
-  DollarSign, TrendingUp, Users, ArrowUpRight, Copy, Check, Key, CreditCard, Mail, Scan, Camera
+  DollarSign, TrendingUp, Users, ArrowUpRight, Copy, Check, Key, CreditCard, Mail, Scan, Camera, UserPlus, X,
+  Trash2, ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { LoanApplication, LoanStatus } from '../types';
+import { LoanApplication, LoanStatus, LoanPurpose } from '../types';
 import { storage } from '../lib/storage';
 import { formatCurrency, calculateDTI, calculateLoanRepayment } from '../lib/calculator';
 import { isSupabaseConfigured, SUPABASE_SQL_SCHEMA } from '../lib/supabase';
@@ -65,6 +66,61 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Supabase Schema Copy Feedback
   const [copiedSchema, setCopiedSchema] = useState<boolean>(false);
   const [showDbModal, setShowDbModal] = useState<boolean>(false);
+
+  // Admin Manual Borrower Registration state
+  const [showAdminRegisterModal, setShowAdminRegisterModal] = useState<boolean>(false);
+  const [adminRegisterForm, setAdminRegisterForm] = useState({
+    fullName: '',
+    email: '',
+    phoneNumber: '',
+    requestedAmount: 100000,
+    purpose: 'Commercial & Business Expansion' as LoanPurpose,
+    repaymentPeriodMonths: 36,
+    password: '',
+  });
+  const [adminRegisterError, setAdminRegisterError] = useState<string>('');
+  const [adminRegisterSuccess, setAdminRegisterSuccess] = useState<string>('');
+  const [adminRegisterLoading, setAdminRegisterLoading] = useState<boolean>(false);
+
+  const handleAdminRegisterBorrower = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminRegisterError('');
+    if (!adminRegisterForm.fullName.trim() || !adminRegisterForm.email.trim()) {
+      setAdminRegisterError('Full name and email address are required.');
+      return;
+    }
+    setAdminRegisterLoading(true);
+    try {
+      const newApp = await storage.registerBorrower({
+        fullName: adminRegisterForm.fullName.trim(),
+        email: adminRegisterForm.email.trim(),
+        phoneNumber: adminRegisterForm.phoneNumber.trim() || '+1 (555) 019-2834',
+        desiredAmount: Number(adminRegisterForm.requestedAmount) || 100000,
+        repaymentMonths: Number(adminRegisterForm.repaymentPeriodMonths) || 36,
+        purpose: adminRegisterForm.purpose,
+        password: adminRegisterForm.password.trim() || 'Borrower2026!',
+      });
+      await loadData();
+      setAdminRegisterSuccess(`✓ Borrower ${newApp.personal.fullName} registered successfully (${newApp.id}). Application added to Underwriting Pipeline.`);
+      setTimeout(() => {
+        setAdminRegisterSuccess('');
+        setShowAdminRegisterModal(false);
+        setAdminRegisterForm({
+          fullName: '',
+          email: '',
+          phoneNumber: '',
+          requestedAmount: 100000,
+          purpose: 'Commercial & Business Expansion',
+          repaymentPeriodMonths: 36,
+          password: '',
+        });
+      }, 1400);
+    } catch (err: any) {
+      setAdminRegisterError(err?.message || 'Failed to register borrower.');
+    } finally {
+      setAdminRegisterLoading(false);
+    }
+  };
 
   const loadData = async () => {
     const apps = await storage.getAllApplications();
@@ -191,6 +247,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const approvedCount = applications.filter((a) => a.status === 'approved' || a.status === 'disbursed').length;
   const approvalRate = applications.length ? Math.round((approvedCount / applications.length) * 100) : 0;
 
+  // Pagination State (Requirement 1 & 3)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [deletingAppId, setDeletingAppId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, searchQuery]);
+
+  const handleDeleteApplication = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete borrower ${name} (File Ref: ${id}) from the database? This cannot be undone.`)) {
+      return;
+    }
+    setDeletingAppId(id);
+    try {
+      await storage.deleteApplication(id);
+      await loadData();
+      setStatusSuccessMsg(`✓ Application dossier ${id} (${name}) has been permanently deleted from the database.`);
+      setTimeout(() => setStatusSuccessMsg(''), 5000);
+    } catch (err: any) {
+      alert(`Failed to delete application: ${err.message}`);
+    } finally {
+      setDeletingAppId(null);
+    }
+  };
+
+  const totalPages = Math.max(1, Math.ceil(filteredApps.length / itemsPerPage));
+  const paginatedApps = filteredApps.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   // LOGIN SCREEN
   if (!isAuthenticated) {
     return (
@@ -305,6 +390,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="flex items-center gap-2.5 flex-wrap">
               <button
                 type="button"
+                onClick={() => setShowAdminRegisterModal(true)}
+                className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold flex items-center gap-2 transition-all shadow-sm ring-1 ring-emerald-600"
+                title="Manually register and onboard a new borrower dossier"
+              >
+                <UserPlus className="w-4 h-4 text-emerald-200" />
+                <span>+ Register Borrower</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setShowOfficerCredentials(true)}
                 className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold flex items-center gap-2 transition-all shadow-sm ring-1 ring-slate-700"
                 title="View confidential officer login credentials and 2FA token"
@@ -393,46 +488,66 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           </div>
 
-          {/* 4 KPI Portfolio Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-slate-100">
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-500 block">
-                Total Pipeline Requested
+          {/* 6 Real Database KPI Portfolio Cards (Requirement 3) */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 mt-6 pt-6 border-t border-slate-100">
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 shadow-2xs">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500 block">
+                Total Registered Users
               </span>
               <span className="text-2xl font-extrabold font-mono text-slate-900 mt-1 block">
-                {formatCurrency(totalVolume)}
+                {applications.length}
               </span>
-              <span className="text-[11px] text-slate-400 mt-0.5 block">{applications.length} submitted dossiers</span>
+              <span className="text-[10px] text-slate-400 mt-0.5 block">Stored in connected DB</span>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-500 block">
+            <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-300 shadow-2xs">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-800 block">
+                ★ New Registrations
+              </span>
+              <span className="text-2xl font-extrabold font-mono text-emerald-900 mt-1 block">
+                {applications.filter((a) => a.status === 'pending_review').length}
+              </span>
+              <span className="text-[10px] text-emerald-700 mt-0.5 block font-medium">Awaiting committee review</span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200 shadow-2xs">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-blue-800 block">
+                Active Users
+              </span>
+              <span className="text-2xl font-extrabold font-mono text-blue-900 mt-1 block">
+                {applications.filter((a) => a.status === 'approved' || a.status === 'disbursed' || a.status === 'underwriting').length}
+              </span>
+              <span className="text-[10px] text-blue-700 mt-0.5 block font-medium">In credit pipeline</span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-200 shadow-2xs">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-slate-600 block">
+                Suspended / Declined
+              </span>
+              <span className="text-2xl font-extrabold font-mono text-slate-700 mt-1 block">
+                {applications.filter((a) => a.status === 'declined').length}
+              </span>
+              <span className="text-[10px] text-slate-500 mt-0.5 block font-medium">Non-qualifying files</span>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 shadow-2xs">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500 block">
                 Approved Capital
               </span>
               <span className="text-2xl font-extrabold font-mono text-emerald-900 mt-1 block">
                 {formatCurrency(approvedVolume)}
               </span>
-              <span className="text-[11px] text-emerald-700 mt-0.5 block font-medium">Ready or disbursed</span>
+              <span className="text-[10px] text-slate-400 mt-0.5 block font-medium">{applications.filter((a) => a.status === 'approved' || a.status === 'disbursed').length} credit lines</span>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-500 block">
-                Awaiting Committee Action
-              </span>
-              <span className="text-2xl font-extrabold font-mono text-amber-900 mt-1 block">
-                {pendingCount}
-              </span>
-              <span className="text-[11px] text-amber-700 mt-0.5 block font-medium">Pending or docs required</span>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-500 block">
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 shadow-2xs">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500 block">
                 Approval Rate
               </span>
               <span className="text-2xl font-extrabold font-mono text-slate-900 mt-1 block">
                 {approvalRate}%
               </span>
-              <span className="text-[11px] text-slate-400 mt-0.5 block">Credit Tier 1/2 distribution</span>
+              <span className="text-[10px] text-slate-400 mt-0.5 block">Tier 1/2 distribution</span>
             </div>
           </div>
         </div>
@@ -471,22 +586,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             {/* Status Filter Tabs */}
-            <div className="flex items-center gap-1 overflow-x-auto text-xs">
+            <div className="flex items-center gap-1.5 overflow-x-auto text-xs pb-1 sm:pb-0">
               {[
-                { key: 'all', label: 'All Dossiers' },
-                { key: 'pending_review', label: 'Pending' },
-                { key: 'underwriting', label: 'Underwriting' },
-                { key: 'documents_required', label: 'Docs Needed' },
-                { key: 'approved', label: 'Approved' },
-                { key: 'declined', label: 'Declined' },
+                { key: 'all', label: `All Dossiers (${applications.length})` },
+                { key: 'pending_review', label: `★ New Registrations (${applications.filter(a => a.status === 'pending_review').length})`, highlight: true },
+                { key: 'underwriting', label: `Underwriting (${applications.filter(a => a.status === 'underwriting').length})` },
+                { key: 'documents_required', label: `Docs Needed (${applications.filter(a => a.status === 'documents_required').length})` },
+                { key: 'approved', label: `Approved (${applications.filter(a => a.status === 'approved' || a.status === 'disbursed').length})` },
+                { key: 'declined', label: `Declined (${applications.filter(a => a.status === 'declined').length})` },
               ].map((tab) => (
                 <button
                   key={tab.key}
                   type="button"
                   onClick={() => setFilterStatus(tab.key)}
-                  className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
                     filterStatus === tab.key
-                      ? 'bg-slate-900 text-white shadow-sm'
+                      ? tab.highlight 
+                        ? 'bg-emerald-800 text-white shadow-sm ring-1 ring-emerald-600'
+                        : 'bg-slate-900 text-white shadow-sm'
+                      : tab.highlight
+                      ? 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-semibold'
                       : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
@@ -517,7 +636,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </td>
                   </tr>
                 ) : (
-                  filteredApps.map((app) => {
+                  paginatedApps.map((app) => {
                     const est = calculateLoanRepayment(app.loan.requestedAmount, 5.75, app.loan.repaymentPeriodMonths);
                     const { dtiPct, riskRating } = calculateDTI(
                       app.employment.monthlyIncome,
@@ -552,15 +671,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                               </div>
                             )}
                             <div>
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-bold text-slate-900">{app.personal.fullName}</span>
+                                {app.status === 'pending_review' && (
+                                  <span className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300">
+                                    ★ NEW REGISTRATION
+                                  </span>
+                                )}
                                 {app.faceVerification && (
                                   <span className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200" title="Biometric Face Liveness Verified">
                                     BIO ✓ {app.faceVerification.livenessScore}%
                                   </span>
                                 )}
                               </div>
-                              <span className="text-[11px] text-slate-500 block">{app.personal.email}</span>
+                              <span className="text-[11px] text-slate-500 block">
+                                {app.personal.email} {app.personal.phoneNumber && <span className="text-slate-400">· {app.personal.phoneNumber}</span>}
+                              </span>
                             </div>
                           </div>
                         </td>
@@ -604,14 +730,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </td>
 
                         <td className="py-3.5 px-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenDossier(app)}
-                            className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-md text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-sm"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>Review Dossier</span>
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDossier(app)}
+                              className="px-2.5 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-md text-xs font-semibold inline-flex items-center gap-1 transition-colors shadow-2xs"
+                              title="Review full borrower profile and underwriting dossier"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">Review</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteApplication(app.id, app.personal.fullName)}
+                              disabled={deletingAppId === app.id}
+                              className="p-1.5 bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 rounded-md transition-colors"
+                              title="Delete / purge applicant dossier from database"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
 
                       </tr>
@@ -621,6 +759,71 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls (Requirement 1 & 3) */}
+          {filteredApps.length > 0 && (
+            <div className="px-4 py-3.5 border-t border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
+              <div className="flex items-center gap-2">
+                <span>Showing <strong>{(currentPage - 1) * itemsPerPage + 1}</strong> to <strong>{Math.min(currentPage * itemsPerPage, filteredApps.length)}</strong> of <strong>{filteredApps.length}</strong> dossiers</span>
+                <span className="text-slate-300">|</span>
+                <div className="flex items-center gap-1.5">
+                  <span>Per page:</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="px-2 py-1 bg-white border border-slate-300 rounded text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-700"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-2.5 py-1 rounded bg-white border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white flex items-center gap-1 transition-colors"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>Prev</span>
+                </button>
+
+                <div className="flex items-center gap-1 px-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pg) => (
+                    <button
+                      key={pg}
+                      type="button"
+                      onClick={() => setCurrentPage(pg)}
+                      className={`w-7 h-7 rounded text-xs font-semibold flex items-center justify-center transition-colors ${
+                        currentPage === pg
+                          ? 'bg-slate-900 text-white shadow-xs'
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {pg}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-2.5 py-1 rounded bg-white border border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-white flex items-center gap-1 transition-colors"
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1253,6 +1456,197 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* ADMIN MANUAL BORROWER REGISTRATION MODAL */}
+      {showAdminRegisterModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="max-w-xl w-full bg-white rounded-2xl p-6 sm:p-7 shadow-2xl border border-slate-200 text-xs">
+            <div className="flex items-start justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-800">
+                  <UserPlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      Administrative Action
+                    </span>
+                    <span className="text-slate-400 text-[10px]">DIRECT ONBOARDING</span>
+                  </div>
+                  <h3 className="text-base font-bold text-slate-900 mt-1">
+                    Register New Borrower & Create Pipeline Dossier
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAdminRegisterModal(false)}
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-slate-600 text-xs mt-3 mb-4 leading-relaxed">
+              Manually registering an applicant provisions their borrower portal account, generates a verified reference dossier (<code className="font-mono text-emerald-800 bg-emerald-50 px-1 py-0.5 rounded">MFS-2026-XXXX</code>), dispatches onboarding notifications, and immediately injects the record into the credit review pipeline.
+            </p>
+
+            {adminRegisterError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                <span>{adminRegisterError}</span>
+              </div>
+            )}
+
+            {adminRegisterSuccess && (
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                <span>{adminRegisterSuccess}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAdminRegisterBorrower} className="space-y-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Borrower Full Legal Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Jonathan R. Vance"
+                    value={adminRegisterForm.fullName}
+                    onChange={(e) => setAdminRegisterForm({ ...adminRegisterForm, fullName: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Email Address (Portal Username) *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="jonathan@vanceholdings.com"
+                    value={adminRegisterForm.email}
+                    onChange={(e) => setAdminRegisterForm({ ...adminRegisterForm, email: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Direct Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="+1 (555) 234-8901"
+                    value={adminRegisterForm.phoneNumber}
+                    onChange={(e) => setAdminRegisterForm({ ...adminRegisterForm, phoneNumber: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Temporary Portal Passcode
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Borrower2026! (leave empty for default)"
+                    value={adminRegisterForm.password}
+                    onChange={(e) => setAdminRegisterForm({ ...adminRegisterForm, password: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Requested Facility ($)
+                  </label>
+                  <input
+                    type="number"
+                    min="10000"
+                    step="5000"
+                    required
+                    value={adminRegisterForm.requestedAmount}
+                    onChange={(e) => setAdminRegisterForm({ ...adminRegisterForm, requestedAmount: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Repayment Term
+                  </label>
+                  <select
+                    value={adminRegisterForm.repaymentPeriodMonths}
+                    onChange={(e) => setAdminRegisterForm({ ...adminRegisterForm, repaymentPeriodMonths: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                  >
+                    <option value={12}>12 Months (1 Year)</option>
+                    <option value={24}>24 Months (2 Years)</option>
+                    <option value={36}>36 Months (3 Years)</option>
+                    <option value={48}>48 Months (4 Years)</option>
+                    <option value={60}>60 Months (5 Years)</option>
+                    <option value={84}>84 Months (7 Years)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Facility Purpose
+                  </label>
+                  <select
+                    value={adminRegisterForm.purpose}
+                    onChange={(e) => setAdminRegisterForm({ ...adminRegisterForm, purpose: e.target.value as LoanPurpose })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                  >
+                    <option value="Commercial & Business Expansion">Commercial & Business</option>
+                    <option value="Property Purchase & Real Estate">Property & Real Estate</option>
+                    <option value="Working Capital & Operations">Working Capital</option>
+                    <option value="Equipment, Machinery & Technology">Equipment & Tech</option>
+                    <option value="Debt Consolidation & Restructuring">Debt Consolidation</option>
+                    <option value="Personal Investment & Wealth Strategy">Wealth & Strategy</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowAdminRegisterModal(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={adminRegisterLoading}
+                  className="px-5 py-2 bg-emerald-800 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
+                >
+                  {adminRegisterLoading ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Registering...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Register & Create Dossier</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
