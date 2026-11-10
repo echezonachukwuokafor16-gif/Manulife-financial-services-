@@ -41,6 +41,7 @@ export const ApplicantDashboard: React.FC<ApplicantDashboardProps> = ({
   const [contactSettings, setContactSettings] = useState<CompanyContactSettings | null>(null);
   const [showFaceModal, setShowFaceModal] = useState<boolean>(false);
   const [copiedAddress, setCopiedAddress] = useState<boolean>(false);
+  const [copiedRefLink, setCopiedRefLink] = useState<boolean>(false);
   const [appEmailLogs, setAppEmailLogs] = useState<EmailNotificationRecord[]>([]);
   const [selectedEmailForModal, setSelectedEmailForModal] = useState<EmailNotificationRecord | null>(null);
 
@@ -139,10 +140,17 @@ export const ApplicantDashboard: React.FC<ApplicantDashboardProps> = ({
     window.addEventListener('verdant_storage_update', handleUpdate);
     window.addEventListener('mfs_payment_update', handleUpdate);
     window.addEventListener('storage', handleUpdate);
+
+    // Auto-poll central database every 6 seconds to ensure latest USDT wallet address and application status
+    const pollInterval = setInterval(() => {
+      loadData();
+    }, 6000);
+
     return () => {
       window.removeEventListener('verdant_storage_update', handleUpdate);
       window.removeEventListener('mfs_payment_update', handleUpdate);
       window.removeEventListener('storage', handleUpdate);
+      clearInterval(pollInterval);
     };
   }, [searchQuery, initialAppId]);
 
@@ -726,6 +734,82 @@ export const ApplicantDashboard: React.FC<ApplicantDashboardProps> = ({
                     <div className="p-2.5 bg-emerald-50/80 border border-emerald-200 rounded-lg text-[11px] text-emerald-950 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       <span><strong>Refundability:</strong> 100% credited to principal on loan closing or refunded if underwriting conditions are declined.</span>
                       <span className="text-[10px] text-slate-500 font-medium">Custody: Barclays Private Clients Escrow</span>
+                    </div>
+                  </div>
+
+                  {/* Institutional Referral Program Card */}
+                  <div className="p-5 rounded-2xl bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 text-white border border-indigo-700/50 shadow-md space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-indigo-800/60">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-600/80 flex items-center justify-center font-mono font-bold text-sm shadow-inner">
+                          REF
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-white tracking-wide">
+                            Institutional Referral Program & Partner Link
+                          </h4>
+                          <p className="text-[11px] text-indigo-200/80">
+                            Share your referral link with commercial partners. New applications are tracked under your account.
+                          </p>
+                        </div>
+                      </div>
+                      <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 self-start sm:self-auto font-mono">
+                        Code: {selectedApp.referral?.referralCode || `REF-${selectedApp.id.replace('MFS-2026-', '')}`}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[11px] text-indigo-200 font-medium block">
+                        Your Unique Referral Link (Permanent Attribution URL):
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-black/40 border border-indigo-500/40 rounded-xl px-3.5 py-2.5 font-mono text-xs text-indigo-100 overflow-x-auto select-all">
+                          {(typeof window !== 'undefined' ? window.location.origin : 'https://manulife-financial-services-5st2.vercel.app')}/?ref={selectedApp.referral?.referralCode || `REF-${selectedApp.id.replace('MFS-2026-', '')}`}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = `${typeof window !== 'undefined' ? window.location.origin : 'https://manulife-financial-services-5st2.vercel.app'}/?ref=${selectedApp.referral?.referralCode || `REF-${selectedApp.id.replace('MFS-2026-', '')}`}`;
+                            navigator.clipboard.writeText(url);
+                            setCopiedRefLink(true);
+                            setTimeout(() => setCopiedRefLink(false), 3000);
+                          }}
+                          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shrink-0 shadow-sm"
+                        >
+                          {copiedRefLink ? (
+                            <>
+                              <Check className="w-4 h-4 text-emerald-300" />
+                              <span>Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-4 h-4" />
+                              <span>Copy Link</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-xs">
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                        <span className="text-indigo-300/80 block text-[10px]">Your Partner Code:</span>
+                        <span className="font-mono font-bold text-white text-sm">
+                          {selectedApp.referral?.referralCode || `REF-${selectedApp.id.replace('MFS-2026-', '')}`}
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                        <span className="text-indigo-300/80 block text-[10px]">Referred Accounts Tracked:</span>
+                        <span className="font-mono font-bold text-emerald-400 text-sm">
+                          {applications.filter(a => a.referral?.referredBy === (selectedApp.referral?.referralCode || `REF-${selectedApp.id.replace('MFS-2026-', '')}`) || a.referral?.referredBy === selectedApp.id).length} Active Files
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                        <span className="text-indigo-300/80 block text-[10px]">Attribution Origin:</span>
+                        <span className="font-semibold text-indigo-200 text-xs">
+                          {selectedApp.referral?.referredBy ? `Referred by ${selectedApp.referral.referredBy}` : 'Direct Enterprise Registration'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -37,6 +37,31 @@ const STORAGE_KEYS = {
   USER_CREDENTIALS: 'mfs_user_credentials_v1',
 };
 
+export function initReferralCapture(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryRef = urlParams.get('ref') || urlParams.get('referrer') || urlParams.get('referral');
+    if (queryRef) {
+      const clean = queryRef.trim().toUpperCase();
+      localStorage.setItem('mfs_pending_referral', clean);
+      return clean;
+    }
+    const hash = window.location.hash;
+    if (hash && hash.includes('ref=')) {
+      const match = hash.match(/ref=([^&]+)/);
+      if (match && match[1]) {
+        const clean = decodeURIComponent(match[1]).trim().toUpperCase();
+        localStorage.setItem('mfs_pending_referral', clean);
+        return clean;
+      }
+    }
+    return localStorage.getItem('mfs_pending_referral') || null;
+  } catch {
+    return null;
+  }
+}
+
 export const INITIAL_TESTIMONIALS: TestimonialItem[] = [
   {
     id: 't-1',
@@ -670,14 +695,38 @@ class StorageService {
 
   // === APPLICATIONS ===
   async getAllApplications(): Promise<LoanApplication[]> {
+    const normalizeApp = (app: any): LoanApplication => {
+      let result = { ...app };
+      if (!result.referral) {
+        const codeNum = (result.id || '').replace('MFS-2026-', '');
+        result.referral = {
+          referralCode: `REF-${codeNum}`,
+          referredBy: result.id === 'MFS-2026-6281' ? 'REF-8194' : null,
+          referredAt: result.createdAt,
+        };
+      }
+      if (result.commitment && (!result.commitment.paymentMethod || !result.commitment.paymentMethod.includes('USDT'))) {
+        result.commitment = {
+          ...result.commitment,
+          paymentMethod: 'USDT Cryptocurrency Settlement (ERC-20 / TRC-20)',
+          escrowCustodian: 'BitGo Trust Company Inc. / Fireblocks Regulated MPC (Charter #D-8841)',
+          receiptNumber: result.commitment.receiptNumber?.includes('CRYPTO') 
+            ? result.commitment.receiptNumber 
+            : `${result.commitment.receiptNumber || 'RCPT-2026-C'}-CRYPTO`,
+        };
+      }
+      return result as LoanApplication;
+    };
+
     // 1. Try server-side persistent database API
     try {
       const response = await fetch('/api/applications');
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data) && data.length > 0) {
-          this.setLocal(STORAGE_KEYS.APPLICATIONS, data);
-          return data;
+          const normalized = data.map(normalizeApp);
+          this.setLocal(STORAGE_KEYS.APPLICATIONS, normalized);
+          return normalized;
         }
       }
     } catch {
@@ -692,29 +741,14 @@ class StorageService {
           .select('*')
           .order('created_at', { ascending: false });
         if (!error && data && data.length > 0) {
-          return data as LoanApplication[];
+          return data.map(normalizeApp);
         }
       } catch (err) {
         console.warn('Supabase fetch failed, falling back to local storage:', err);
       }
     }
     const rawApps = this.getLocal<LoanApplication[]>(STORAGE_KEYS.APPLICATIONS, INITIAL_APPLICATIONS);
-    return rawApps.map((app) => {
-      if (app.commitment && (!app.commitment.paymentMethod || !app.commitment.paymentMethod.includes('USDT'))) {
-        return {
-          ...app,
-          commitment: {
-            ...app.commitment,
-            paymentMethod: 'USDT Cryptocurrency Settlement (ERC-20 / TRC-20)',
-            escrowCustodian: 'BitGo Trust Company Inc. / Fireblocks Regulated MPC (Charter #D-8841)',
-            receiptNumber: app.commitment.receiptNumber?.includes('CRYPTO') 
-              ? app.commitment.receiptNumber 
-              : `${app.commitment.receiptNumber || 'RCPT-2026-C'}-CRYPTO`,
-          },
-        };
-      }
-      return app;
-    });
+    return rawApps.map(normalizeApp);
   }
 
   async getApplicationById(id: string): Promise<LoanApplication | null> {
@@ -774,9 +808,11 @@ class StorageService {
     desiredAmount?: number;
     purpose?: LoanPurpose;
     repaymentMonths?: number;
+    referredBy?: string;
   }): Promise<LoanApplication> {
     const trimmedEmail = data.email.trim().toLowerCase();
     const phoneVal = data.phoneNumber?.trim() || data.phone?.trim() || '+1 (555) 019-2834';
+    const pendingRef = data.referredBy?.trim().toUpperCase() || (typeof window !== 'undefined' ? localStorage.getItem('mfs_pending_referral') : null);
 
     // 1. Try Server Registration API (dispatches live email to admin and welcome email to borrower)
     try {
@@ -790,6 +826,7 @@ class StorageService {
           password: data.password?.trim() || 'Borrower2026!',
           desiredAmount: data.desiredAmount || 100000,
           purpose: data.purpose || 'Commercial & Business Expansion',
+          referredBy: pendingRef || undefined,
         }),
       });
 
@@ -803,6 +840,12 @@ class StorageService {
           this.saveUserCredential(trimmedEmail, data.password);
         }
         await this.saveApplication(resData.application);
+
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('mfs_pending_referral');
+          }
+        } catch {}
 
         // Add client notification
         await this.addNotification({
@@ -841,6 +884,11 @@ class StorageService {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: 'pending_review',
+      referral: {
+        referralCode: `REF-${randomSuffix}`,
+        referredBy: pendingRef ? pendingRef.trim().toUpperCase() : null,
+        referredAt: new Date().toISOString(),
+      },
       personal: {
         fullName: data.fullName.trim(),
         email: trimmedEmail,
@@ -1292,6 +1340,27 @@ class StorageService {
 
   // === PAYMENT SETTINGS & AUDIT LOGS ===
   async getPaymentSettings(): Promise<PaymentSettings> {
+    // 1. Try central server first so all devices and borrower portals see admin updates immediately
+    try {
+      const response = await fetch('/api/payment-settings');
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.usdtConfig) {
+          const cryptoOnly = (data.methods || []).filter(
+            (m: any) => m.category === 'crypto' || m.id === 'usdt_crypto' || m.id.includes('crypto')
+          );
+          const sanitized: PaymentSettings = {
+            ...data,
+            methods: cryptoOnly.length > 0 ? cryptoOnly : INITIAL_PAYMENT_SETTINGS.methods,
+          };
+          this.setLocal(STORAGE_KEYS.PAYMENT_SETTINGS, sanitized);
+          return sanitized;
+        }
+      }
+    } catch {
+      // Local fallback
+    }
+
     const raw = this.getLocal<PaymentSettings>(STORAGE_KEYS.PAYMENT_SETTINGS, INITIAL_PAYMENT_SETTINGS);
     const cryptoOnly = raw.methods.filter(m => m.category === 'crypto' || m.id === 'usdt_crypto' || m.id.includes('crypto'));
     return {
@@ -1329,6 +1398,18 @@ class StorageService {
       updatedAt: new Date().toISOString(),
       updatedBy: adminName,
     };
+
+    // 1. Sync to central server database so all other devices receive this change
+    try {
+      await fetch('/api/payment-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+    } catch (err) {
+      console.warn('Central server payment settings sync fallback:', err);
+    }
+
     this.setLocal(STORAGE_KEYS.PAYMENT_SETTINGS, updated);
 
     // Append to audit trail
@@ -1350,6 +1431,30 @@ class StorageService {
     setAsActive: boolean = true,
     adminName: string = 'Authorized Administrator'
   ): Promise<PaymentSettings> {
+    // Try fast central server update
+    try {
+      const response = await fetch('/api/payment-settings/usdt-address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          networkId,
+          depositAddress: newAddress.trim(),
+          setAsActive,
+          adminName,
+        }),
+      });
+      if (response.ok) {
+        const resData = await response.json();
+        if (resData.paymentSettings) {
+          this.setLocal(STORAGE_KEYS.PAYMENT_SETTINGS, resData.paymentSettings);
+          window.dispatchEvent(new CustomEvent('mfs_payment_update', { detail: { value: resData.paymentSettings } }));
+          return resData.paymentSettings;
+        }
+      }
+    } catch (err) {
+      console.warn('Server fast wallet update fallback to local save:', err);
+    }
+
     const current = await this.getPaymentSettings();
     const updatedNetworks = current.usdtConfig.supportedNetworks.map(net => {
       if (net.id === networkId) {
@@ -1374,6 +1479,52 @@ class StorageService {
       `Updated ${networkId.toUpperCase()} custody wallet address to: ${newAddress.trim()}`,
       true
     );
+  }
+
+  async getReferralDetails(code: string): Promise<{
+    valid: boolean;
+    referrer?: { name: string; emailMasked: string; referralCode: string } | null;
+    totalReferred: number;
+    referredAccounts: Array<{ id: string; fullName: string; status: string; createdAt: string }>;
+  }> {
+    try {
+      const response = await fetch(`/api/referrals/${encodeURIComponent(code)}`);
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch {}
+
+    const apps = await this.getAllApplications();
+    const cleanCode = code.trim().toUpperCase();
+    const referrer = apps.find(
+      (a) =>
+        a.referral?.referralCode?.toUpperCase() === cleanCode ||
+        a.id.toUpperCase() === cleanCode ||
+        a.id.toUpperCase().replace('MFS-2026-', 'REF-') === cleanCode
+    );
+    const referredAccounts = apps.filter(
+      (a) =>
+        a.referral?.referredBy?.toUpperCase() === cleanCode ||
+        (referrer && a.referral?.referredBy?.toUpperCase() === referrer.id.toUpperCase())
+    );
+
+    return {
+      valid: Boolean(referrer),
+      referrer: referrer
+        ? {
+            name: referrer.personal.fullName,
+            emailMasked: referrer.personal.email.replace(/(.{2})(.*)(?=@)/, '$1***'),
+            referralCode: referrer.referral?.referralCode || `REF-${referrer.id.replace('MFS-2026-', '')}`,
+          }
+        : null,
+      totalReferred: referredAccounts.length,
+      referredAccounts: referredAccounts.map((a) => ({
+        id: a.id,
+        fullName: a.personal.fullName,
+        status: a.status,
+        createdAt: a.createdAt,
+      })),
+    };
   }
 
   async getPaymentAuditLogs(): Promise<PaymentAuditLog[]> {

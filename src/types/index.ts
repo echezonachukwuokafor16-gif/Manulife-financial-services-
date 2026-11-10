@@ -128,6 +128,13 @@ export interface LoanApplication {
     uploadedAt: string;
     status: 'verified' | 'pending' | 'rejected';
   }[];
+
+  // Referral tracking
+  referral?: {
+    referralCode?: string;
+    referredBy?: string | null;
+    referredAt?: string;
+  };
 }
 
 export interface FaceVerification {

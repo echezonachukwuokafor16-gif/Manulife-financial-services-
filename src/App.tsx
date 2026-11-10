@@ -25,6 +25,7 @@ import { EmailLetterModal } from './components/EmailLetterModal';
 import { LoanApplication, LoanPurpose, EmailNotificationRecord } from './types';
 import { LanguageProvider } from './context/LanguageContext';
 import { LanguageSelector } from './components/LanguageSelector';
+import { initReferralCapture } from './lib/storage';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<'home' | 'apply' | 'applicant-portal' | 'admin-portal'>('home');
@@ -33,6 +34,7 @@ export default function App() {
   const [prefilledTerm, setPrefilledTerm] = useState<12 | 24 | 36 | 48>(36);
   const [prefilledPurpose, setPrefilledPurpose] = useState<LoanPurpose>('Commercial & Business Expansion');
   const [globalLetterEmail, setGlobalLetterEmail] = useState<EmailNotificationRecord | null>(null);
+  const [activeReferralCode, setActiveReferralCode] = useState<string | null>(null);
 
   // Authentication & Session state
   const [userSession, setUserSession] = useState<{ role: 'admin' | 'borrower' | null; email?: string }>(() => {
@@ -97,8 +99,13 @@ export default function App() {
     setIsAuthModalOpen(true);
   };
 
-  // Discreet administrative access listener (Hash #admin or Ctrl+Shift+A)
+  // Discreet administrative access listener & Referral Link Capture
   React.useEffect(() => {
+    const detectedRef = initReferralCapture();
+    if (detectedRef) {
+      setActiveReferralCode(detectedRef);
+    }
+
     const checkHash = () => {
       if (window.location.hash === '#admin' || window.location.hash === '#underwriting') {
         setCurrentView('admin-portal');

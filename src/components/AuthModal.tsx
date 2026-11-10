@@ -43,6 +43,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [signUpPassword, setSignUpPassword] = useState<string>('');
   const [showSignUpPassword, setShowSignUpPassword] = useState<boolean>(false);
   const [desiredAmount, setDesiredAmount] = useState<number>(100000);
+  const [referralCode, setReferralCode] = useState<string>('');
 
   // Forgot Password State
   const [forgotEmail, setForgotEmail] = useState<string>('');
@@ -51,12 +52,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
   const [forgotStep, setForgotStep] = useState<'request' | 'verify'>('request');
 
-  // Keep activeTab in sync when modal opens
+  // Keep activeTab in sync and detect referral code when modal opens
   React.useEffect(() => {
     if (isOpen) {
       setActiveTab(initialTab);
       setErrorMsg('');
       setSuccessMsg('');
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryRef = urlParams.get('ref') || urlParams.get('referrer');
+        const storedRef = localStorage.getItem('mfs_pending_referral');
+        if (queryRef) {
+          const clean = queryRef.trim().toUpperCase();
+          setReferralCode(clean);
+          localStorage.setItem('mfs_pending_referral', clean);
+        } else if (storedRef) {
+          setReferralCode(storedRef.trim().toUpperCase());
+        }
+      } catch {}
     }
   }, [isOpen, initialTab]);
 
@@ -213,6 +226,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         password: trimmedPassword,
         desiredAmount: desiredAmount || 100000,
         purpose: 'Commercial & Business Expansion',
+        referredBy: referralCode.trim() ? referralCode.trim().toUpperCase() : undefined,
       });
 
       // Dispatch event to sync Admin Portal and all subscriber components instantly
@@ -575,6 +589,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     className="w-full pl-10 pr-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-700"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-semibold mb-1 flex items-center justify-between text-xs">
+                  <span>Referral Code (Affiliate / Partner)</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Optional</span>
+                </label>
+                <div className="relative">
+                  <Key className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder="e.g. REF-8194"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    className="w-full pl-10 pr-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono uppercase font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+                  />
+                </div>
+                {referralCode && (
+                  <p className="text-[10px] text-emerald-700 font-medium mt-1 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600 flex-shrink-0" />
+                    <span>Referral attribution active for partner <strong className="font-mono">{referralCode.trim().toUpperCase()}</strong></span>
+                  </p>
+                )}
               </div>
 
               <button

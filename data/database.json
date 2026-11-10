@@ -1,6 +1,237 @@
 {
   "applications": [
     {
+      "id": "MFS-2026-5114",
+      "createdAt": "2026-11-10T14:57:56.158Z",
+      "updatedAt": "2026-11-10T14:57:56.158Z",
+      "status": "pending_review",
+      "referral": {
+        "referralCode": "REF-5114",
+        "referredBy": null,
+        "referredAt": "2026-11-10T14:57:56.158Z"
+      },
+      "personal": {
+        "fullName": "Marcus Vance",
+        "email": "marcus.vance@example.com",
+        "phoneNumber": "+1 (555) 019-2834",
+        "dob": "1990-01-01",
+        "gender": "Prefer not to say",
+        "nationality": "International",
+        "residenceCountry": "United Kingdom",
+        "residentialAddress": "Registered via Customer Portal"
+      },
+      "employment": {
+        "employerName": "Registered Enterprise / Self-Employed",
+        "occupation": "Commercial Borrower",
+        "employmentDuration": "2+ years",
+        "employmentType": "Full-Time Permanent",
+        "monthlyIncome": 6500,
+        "additionalIncome": 0
+      },
+      "loan": {
+        "requestedAmount": 100000,
+        "purpose": "Commercial & Business Expansion",
+        "repaymentPeriodMonths": 36,
+        "preferredPaymentMethod": "USDT Cryptocurrency Settlement (ERC-20 / TRC-20)"
+      },
+      "financial": {
+        "existingLoans": 0,
+        "monthlyObligations": 0,
+        "monthlyRent": 1200,
+        "otherCommitments": 0
+      },
+      "commitment": {
+        "requestedLoanAmount": 100000,
+        "commitmentRatePct": 10,
+        "commitmentAmount": 10000,
+        "purposeDescription": "Designated 10% refundable earnest commitment held in multi-sig digital custody.",
+        "refundabilityType": "100% Credited to Principal upon Closing or Refunded if Underwriting Declines",
+        "termsAccepted": true,
+        "acknowledgedNoGuarantee": true,
+        "receiptNumber": "RCPT-2026-5114-C-CRYPTO",
+        "paymentMethod": "USDT Cryptocurrency Settlement (ERC-20 / TRC-20)",
+        "paymentStatus": "Designated Escrow Rail Configured",
+        "disclosedAt": "2026-11-10T14:57:56.158Z",
+        "escrowCustodian": "BitGo Trust Company Inc. / Fireblocks MPC Multi-Sig (Charter #D-8841)"
+      },
+      "declaration": {
+        "confirmedAccurate": true,
+        "acceptedDisclosures": true,
+        "signatureDataUrl": "Marcus Vance",
+        "signatureType": "type",
+        "signedAt": "2026-11-10T14:57:56.158Z"
+      },
+      "underwriting": {
+        "riskTier": "Tier 2 (Near-Prime)",
+        "officerNotes": "New applicant registration received on Tuesday, November 10, 2026 at 2:57:56 PM. Initial verification in progress.",
+        "reviewedBy": "Underwriting Queue Desk"
+      },
+      "documents": [
+        {
+          "id": "doc-1794322676158",
+          "name": "Borrower_Registration_File.pdf",
+          "type": "application/pdf",
+          "size": "1.2 MB",
+          "uploadedAt": "2026-11-10T14:57:56.158Z",
+          "status": "verified"
+        }
+      ]
+    },
+    {
+      "id": "MFS-2026-4411",
+      "createdAt": "2026-11-10T14:57:51.013Z",
+      "updatedAt": "2026-11-10T14:57:51.013Z",
+      "status": "pending_review",
+      "referral": {
+        "referralCode": "REF-4411",
+        "referredBy": "REF-8194",
+        "referredAt": "2026-11-10T14:57:51.013Z"
+      },
+      "personal": {
+        "fullName": "Elena Rostova",
+        "email": "elena.rostova@example.com",
+        "phoneNumber": "+1 (555) 019-2834",
+        "dob": "1990-01-01",
+        "gender": "Prefer not to say",
+        "nationality": "International",
+        "residenceCountry": "United Kingdom",
+        "residentialAddress": "Registered via Customer Portal"
+      },
+      "employment": {
+        "employerName": "Registered Enterprise / Self-Employed",
+        "occupation": "Commercial Borrower",
+        "employmentDuration": "2+ years",
+        "employmentType": "Full-Time Permanent",
+        "monthlyIncome": 6500,
+        "additionalIncome": 0
+      },
+      "loan": {
+        "requestedAmount": 100000,
+        "purpose": "Commercial & Business Expansion",
+        "repaymentPeriodMonths": 36,
+        "preferredPaymentMethod": "USDT Cryptocurrency Settlement (ERC-20 / TRC-20)"
+      },
+      "financial": {
+        "existingLoans": 0,
+        "monthlyObligations": 0,
+        "monthlyRent": 1200,
+        "otherCommitments": 0
+      },
+      "commitment": {
+        "requestedLoanAmount": 100000,
+        "commitmentRatePct": 10,
+        "commitmentAmount": 10000,
+        "purposeDescription": "Designated 10% refundable earnest commitment held in multi-sig digital custody.",
+        "refundabilityType": "100% Credited to Principal upon Closing or Refunded if Underwriting Declines",
+        "termsAccepted": true,
+        "acknowledgedNoGuarantee": true,
+        "receiptNumber": "RCPT-2026-4411-C-CRYPTO",
+        "paymentMethod": "USDT Cryptocurrency Settlement (ERC-20 / TRC-20)",
+        "paymentStatus": "Designated Escrow Rail Configured",
+        "disclosedAt": "2026-11-10T14:57:51.013Z",
+        "escrowCustodian": "BitGo Trust Company Inc. / Fireblocks MPC Multi-Sig (Charter #D-8841)"
+      },
+      "declaration": {
+        "confirmedAccurate": true,
+        "acceptedDisclosures": true,
+        "signatureDataUrl": "Elena Rostova",
+        "signatureType": "type",
+        "signedAt": "2026-11-10T14:57:51.013Z"
+      },
+      "underwriting": {
+        "riskTier": "Tier 2 (Near-Prime)",
+        "officerNotes": "New applicant registration received on Tuesday, November 10, 2026 at 2:57:51 PM. Initial verification in progress.",
+        "reviewedBy": "Underwriting Queue Desk"
+      },
+      "documents": [
+        {
+          "id": "doc-1794322671014",
+          "name": "Borrower_Registration_File.pdf",
+          "type": "application/pdf",
+          "size": "1.2 MB",
+          "uploadedAt": "2026-11-10T14:57:51.013Z",
+          "status": "verified"
+        }
+      ]
+    },
+    {
+      "id": "MFS-2026-4741",
+      "createdAt": "2026-11-10T14:53:21.926Z",
+      "updatedAt": "2026-11-10T14:53:21.926Z",
+      "status": "pending_review",
+      "referral": {
+        "referralCode": "REF-4741",
+        "referredBy": "REF-8194",
+        "referredAt": "2026-11-10T14:53:21.926Z"
+      },
+      "personal": {
+        "fullName": "Alexander Wright",
+        "email": "a.wright@wright-energy.co.uk",
+        "phoneNumber": "+44 7700 900142",
+        "dob": "1990-01-01",
+        "gender": "Prefer not to say",
+        "nationality": "International",
+        "residenceCountry": "United Kingdom",
+        "residentialAddress": "Registered via Customer Portal"
+      },
+      "employment": {
+        "employerName": "Registered Enterprise / Self-Employed",
+        "occupation": "Commercial Borrower",
+        "employmentDuration": "2+ years",
+        "employmentType": "Full-Time Permanent",
+        "monthlyIncome": 6500,
+        "additionalIncome": 0
+      },
+      "loan": {
+        "requestedAmount": 250000,
+        "purpose": "Commercial & Business Expansion",
+        "repaymentPeriodMonths": 36,
+        "preferredPaymentMethod": "USDT Cryptocurrency Settlement (ERC-20 / TRC-20)"
+      },
+      "financial": {
+        "existingLoans": 0,
+        "monthlyObligations": 0,
+        "monthlyRent": 1200,
+        "otherCommitments": 0
+      },
+      "commitment": {
+        "requestedLoanAmount": 250000,
+        "commitmentRatePct": 10,
+        "commitmentAmount": 25000,
+        "purposeDescription": "Designated 10% refundable earnest commitment held in multi-sig digital custody.",
+        "refundabilityType": "100% Credited to Principal upon Closing or Refunded if Underwriting Declines",
+        "termsAccepted": true,
+        "acknowledgedNoGuarantee": true,
+        "receiptNumber": "RCPT-2026-4741-C-CRYPTO",
+        "paymentMethod": "USDT Cryptocurrency Settlement (ERC-20 / TRC-20)",
+        "paymentStatus": "Designated Escrow Rail Configured",
+        "disclosedAt": "2026-11-10T14:53:21.926Z",
+        "escrowCustodian": "BitGo Trust Company Inc. / Fireblocks MPC Multi-Sig (Charter #D-8841)"
+      },
+      "declaration": {
+        "confirmedAccurate": true,
+        "acceptedDisclosures": true,
+        "signatureDataUrl": "Alexander Wright",
+        "signatureType": "type",
+        "signedAt": "2026-11-10T14:53:21.926Z"
+      },
+      "underwriting": {
+        "riskTier": "Tier 2 (Near-Prime)",
+        "officerNotes": "New applicant registration received on Tuesday, November 10, 2026 at 2:53:21 PM. Initial verification in progress.",
+        "reviewedBy": "Underwriting Queue Desk"
+      },
+      "documents": [
+        {
+          "id": "doc-1794322401963",
+          "name": "Borrower_Registration_File.pdf",
+          "type": "application/pdf",
+          "size": "1.2 MB",
+          "uploadedAt": "2026-11-10T14:53:21.926Z",
+          "status": "verified"
+        }
+      ]
+    },
+    {
       "id": "MFS-2026-8194",
       "createdAt": "2026-11-06T09:36:39.359Z",
       "updatedAt": "2026-11-08T09:36:39.359Z",
@@ -66,7 +297,12 @@
         "decisionDate": "2026-11-08T09:36:39.359Z",
         "disbursementReference": "WIRE-2026-8194"
       },
-      "documents": []
+      "documents": [],
+      "referral": {
+        "referralCode": "REF-8194",
+        "referredBy": null,
+        "referredAt": "2026-11-06T09:36:39.359Z"
+      }
     },
     {
       "id": "MFS-2026-6281",
@@ -130,16 +366,87 @@
         "officerNotes": "New registration received. Underwriting preliminary audit pending.",
         "reviewedBy": "A. Montgomery (Credit Committee Underwriter)"
       },
-      "documents": []
+      "documents": [],
+      "referral": {
+        "referralCode": "REF-6281",
+        "referredBy": "REF-8194",
+        "referredAt": "2026-11-08T09:36:39.359Z"
+      }
     }
   ],
   "credentials": {
     "admin@manulife-financial.com": "admin2026",
     "e.vance@sterling-holdings.co.uk": "Client2026!",
     "sofia.reyes@clinica-biomed.es": "Client2026!",
-    "victoria.fox@sterlingholdings.co.uk": "SecurePassword2026!"
+    "victoria.fox@sterlingholdings.co.uk": "SecurePassword2026!",
+    "a.wright@wright-energy.co.uk": "SecurePassword2026!",
+    "elena.rostova@example.com": "Password123!",
+    "marcus.vance@example.com": "Password123!"
   },
   "emailLogs": [
+    {
+      "id": "eml-1794322676159",
+      "applicationId": "MFS-2026-5114",
+      "recipientEmail": "marcus.vance@example.com",
+      "recipientName": "Marcus Vance",
+      "ccEmail": "echezonachukwuokafor16@gmail.com",
+      "subject": "Welcome to Manulife Financial Services · Account Dossier #MFS-2026-5114",
+      "triggerEvent": "user_registration",
+      "status": "delivered",
+      "provider": "server_smtp_relay",
+      "sentAt": "2026-11-10T14:57:56.158Z",
+      "adminNotificationResult": {
+        "success": true,
+        "provider": "server_smtp_relay",
+        "messageId": "relay-1794322676159-hy3mt",
+        "details": {
+          "status": "queued_and_recorded",
+          "instruction": "To send live emails to external inboxes, add RESEND_API_KEY or SENDGRID_API_KEY to your environment variables."
+        }
+      }
+    },
+    {
+      "id": "eml-1794322671015",
+      "applicationId": "MFS-2026-4411",
+      "recipientEmail": "elena.rostova@example.com",
+      "recipientName": "Elena Rostova",
+      "ccEmail": "echezonachukwuokafor16@gmail.com",
+      "subject": "Welcome to Manulife Financial Services · Account Dossier #MFS-2026-4411",
+      "triggerEvent": "user_registration",
+      "status": "delivered",
+      "provider": "server_smtp_relay",
+      "sentAt": "2026-11-10T14:57:51.013Z",
+      "adminNotificationResult": {
+        "success": true,
+        "provider": "server_smtp_relay",
+        "messageId": "relay-1794322671014-82ajj",
+        "details": {
+          "status": "queued_and_recorded",
+          "instruction": "To send live emails to external inboxes, add RESEND_API_KEY or SENDGRID_API_KEY to your environment variables."
+        }
+      }
+    },
+    {
+      "id": "eml-1794322401972",
+      "applicationId": "MFS-2026-4741",
+      "recipientEmail": "a.wright@wright-energy.co.uk",
+      "recipientName": "Alexander Wright",
+      "ccEmail": "echezonachukwuokafor16@gmail.com",
+      "subject": "Welcome to Manulife Financial Services · Account Dossier #MFS-2026-4741",
+      "triggerEvent": "user_registration",
+      "status": "delivered",
+      "provider": "server_smtp_relay",
+      "sentAt": "2026-11-10T14:53:21.926Z",
+      "adminNotificationResult": {
+        "success": true,
+        "provider": "server_smtp_relay",
+        "messageId": "relay-1794322401972-2lb8l",
+        "details": {
+          "status": "queued_and_recorded",
+          "instruction": "To send live emails to external inboxes, add RESEND_API_KEY or SENDGRID_API_KEY to your environment variables."
+        }
+      }
+    },
     {
       "id": "eml-1794217014616",
       "applicationId": "MFS-2026-4063",
@@ -167,6 +474,82 @@
     "victoria.fox@sterlingholdings.co.uk": {
       "code": "135731",
       "expiresAt": 1794217925932
+    }
+  },
+  "paymentSettings": {
+    "updatedAt": "2026-11-10T14:53:51.669Z",
+    "updatedBy": "Authorized Administrator",
+    "methods": [
+      {
+        "id": "usdt_crypto",
+        "name": "USDT Cryptocurrency Settlement (ERC-20 / TRC-20 / Polygon)",
+        "category": "crypto",
+        "enabled": true,
+        "providerName": "BitGo Trust Company Inc. / Fireblocks Regulated MPC",
+        "providerAccountOrAddress": "0x71C8A326d9e075841f48641498C0CFe448eBB492 (ERC-20 Custody)",
+        "processingTime": "12 - 32 Confirmations (~5 - 15 mins)",
+        "transactionFeePct": 0,
+        "fixedFee": 0,
+        "currency": "USDT",
+        "notes": "Exclusive authorized designated settlement rail for applicant earnest commitment deposits. Regulated institutional multi-sig custody.",
+        "requiresIndependentVerification": true
+      }
+    ],
+    "usdtConfig": {
+      "enabled": true,
+      "isLegalApprovalGranted": true,
+      "authorizedCustodian": "BitGo Trust Company Inc. / Fireblocks Regulated MPC Custody",
+      "custodianLicenseRef": "NYS-DFS Regulated Trust Charter #D-8841 & SOC 2 Type II Certified",
+      "supportedNetworks": [
+        {
+          "id": "erc20",
+          "name": "Ethereum Mainnet",
+          "tokenStandard": "ERC-20",
+          "active": true,
+          "depositAddress": "0x71C8A326d9e075841f48641498C0CFe448eBB492",
+          "confirmationsRequired": 32,
+          "estConfirmationMinutes": "8 - 12 Minutes",
+          "networkGasFeeEst": "≈ 2.50 - 6.00 USDT (Paid by sender to Ethereum miners)",
+          "contractAddress": "0xdac17f958d2ee523a2206206994597c13d831ec7"
+        },
+        {
+          "id": "trc20",
+          "name": "Tron Blockchain",
+          "tokenStandard": "TRC-20",
+          "active": true,
+          "depositAddress": "TYjS99Wre5wQJvT4K1qYxP25aZkU9XyBqA",
+          "confirmationsRequired": 19,
+          "estConfirmationMinutes": "2 - 4 Minutes",
+          "networkGasFeeEst": "≈ 1.50 - 2.80 USDT (Paid by sender to Tron network)",
+          "contractAddress": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"
+        },
+        {
+          "id": "polygon",
+          "name": "Polygon PoS Network",
+          "tokenStandard": "Polygon Native (ERC-20)",
+          "active": false,
+          "depositAddress": "0x71C8A326d9e075841f48641498C0CFe448eBB492",
+          "confirmationsRequired": 128,
+          "estConfirmationMinutes": "4 - 6 Minutes",
+          "networkGasFeeEst": "≈ 0.15 - 0.40 USDT (Paid by sender to Polygon validators)",
+          "contractAddress": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
+        }
+      ],
+      "activeNetworkId": "erc20",
+      "exchangeRateUsd": 1,
+      "oracleProvider": "Chainlink Decentralized Oracle (USDT / USD Live Aggregator)",
+      "custodySurchargePct": 0,
+      "gasFeePolicy": "Native blockchain network miner/gas fees are determined exclusively by on-chain network congestion, paid directly by the sender wallet, and are non-refundable by Manulife Financial Services under any circumstances.",
+      "refundPolicy": "If the loan application is declined by the Credit Committee or overpaid, the USDT principal commitment is refunded within 3 business days to the verified originating whitelisted wallet address (less native non-refundable network gas fees).",
+      "paymentConditions": [
+        "USDT (Tether USD) is an asset-backed cryptocurrency pegged 1:1 to the US Dollar.",
+        "Transfers must be broadcast strictly across authorized networks (Ethereum ERC-20 or Tron TRC-20). Cross-chain transfers or incompatible asset transmissions are irreversible on decentralized ledgers.",
+        "All incoming wallet addresses are automatically scanned through TRM Labs & Chainalysis for AML/OFAC compliance.",
+        "Zero upfront lending fee guarantee: Manulife Financial Services charges 0.00% platform surcharge for USDT settlement. 100% of the commitment is credited to principal upon closing.",
+        "Independent ledger verification: A compliance officer must independently verify on-chain block confirmations and sign off before final settlement receipt is issued."
+      ],
+      "noGuaranteeDisclosure": "CRITICAL REGULATORY COMPLIANCE NOTICE: A blockchain transfer or USDT cryptocurrency transaction DOES NOT constitute a guarantee, promise, or warranty of loan approval. Loan decisions are strictly determined by formal Underwriting Committee assessment of applicant creditworthiness.",
+      "independentVerificationRequired": true
     }
   }
 }

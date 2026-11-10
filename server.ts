@@ -4,6 +4,7 @@
  */
 
 import express from 'express';
+import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
@@ -16,8 +17,15 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
-const DATA_DIR = path.resolve(__dirname, 'data');
+const DATA_DIR = process.env.VERCEL ? path.resolve('/tmp', 'mfs_data') : path.resolve(__dirname, 'data');
 const DB_FILE = path.resolve(DATA_DIR, 'database.json');
+
+app.use(cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+}));
 
 app.use(express.json({ limit: '15mb' }));
 
@@ -32,6 +40,7 @@ interface DBStructure {
   emailLogs: any[];
   testimonials: any[];
   resetCodes: Record<string, { code: string; expiresAt: number }>;
+  paymentSettings?: any;
 }
 
 const INITIAL_DB: DBStructure = {
@@ -177,6 +186,82 @@ const INITIAL_DB: DBStructure = {
   emailLogs: [],
   testimonials: [],
   resetCodes: {},
+  paymentSettings: {
+    updatedAt: new Date().toISOString(),
+    updatedBy: 'A. Montgomery (Senior Underwriter & Compliance Officer)',
+    methods: [
+      {
+        id: 'usdt_crypto',
+        name: 'USDT Cryptocurrency Settlement (ERC-20 / TRC-20 / Polygon)',
+        category: 'crypto',
+        enabled: true,
+        providerName: 'BitGo Trust Company Inc. / Fireblocks Regulated MPC',
+        providerAccountOrAddress: '0x71C8A326d9e075841f48641498C0CFe448eBB492 (ERC-20 Custody)',
+        processingTime: '12 - 32 Confirmations (~5 - 15 mins)',
+        transactionFeePct: 0,
+        fixedFee: 0,
+        currency: 'USDT',
+        notes: 'Exclusive authorized designated settlement rail for applicant earnest commitment deposits. Regulated institutional multi-sig custody.',
+        requiresIndependentVerification: true,
+      },
+    ],
+    usdtConfig: {
+      enabled: true,
+      isLegalApprovalGranted: true,
+      authorizedCustodian: 'BitGo Trust Company Inc. / Fireblocks Regulated MPC Custody',
+      custodianLicenseRef: 'NYS-DFS Regulated Trust Charter #D-8841 & SOC 2 Type II Certified',
+      supportedNetworks: [
+        {
+          id: 'erc20',
+          name: 'Ethereum Mainnet',
+          tokenStandard: 'ERC-20',
+          active: true,
+          depositAddress: '0x71C8A326d9e075841f48641498C0CFe448eBB492',
+          confirmationsRequired: 32,
+          estConfirmationMinutes: '8 - 12 Minutes',
+          networkGasFeeEst: '≈ 2.50 - 6.00 USDT (Paid by sender to Ethereum miners)',
+          contractAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        },
+        {
+          id: 'trc20',
+          name: 'Tron Blockchain',
+          tokenStandard: 'TRC-20',
+          active: true,
+          depositAddress: 'TYjS99Wre5wQJvT4K1qYxP25aZkU9XyBqA',
+          confirmationsRequired: 19,
+          estConfirmationMinutes: '2 - 4 Minutes',
+          networkGasFeeEst: '≈ 1.50 - 2.80 USDT (Paid by sender to Tron network)',
+          contractAddress: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t',
+        },
+        {
+          id: 'polygon',
+          name: 'Polygon PoS Network',
+          tokenStandard: 'Polygon Native (ERC-20)',
+          active: false,
+          depositAddress: '0x71C8A326d9e075841f48641498C0CFe448eBB492',
+          confirmationsRequired: 128,
+          estConfirmationMinutes: '4 - 6 Minutes',
+          networkGasFeeEst: '≈ 0.15 - 0.40 USDT (Paid by sender to Polygon validators)',
+          contractAddress: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+        },
+      ],
+      activeNetworkId: 'erc20',
+      exchangeRateUsd: 1.0,
+      oracleProvider: 'Chainlink Decentralized Oracle (USDT / USD Live Aggregator)',
+      custodySurchargePct: 0.0,
+      gasFeePolicy: 'Native blockchain network miner/gas fees are determined exclusively by on-chain network congestion, paid directly by the sender wallet, and are non-refundable by Manulife Financial Services under any circumstances.',
+      refundPolicy: 'If the loan application is declined by the Credit Committee or overpaid, the USDT principal commitment is refunded within 3 business days to the verified originating whitelisted wallet address (less native non-refundable network gas fees).',
+      paymentConditions: [
+        'USDT (Tether USD) is an asset-backed cryptocurrency pegged 1:1 to the US Dollar.',
+        'Transfers must be broadcast strictly across authorized networks (Ethereum ERC-20 or Tron TRC-20). Cross-chain transfers or incompatible asset transmissions are irreversible on decentralized ledgers.',
+        'All incoming wallet addresses are automatically scanned through TRM Labs & Chainalysis for AML/OFAC compliance.',
+        'Zero upfront lending fee guarantee: Manulife Financial Services charges 0.00% platform surcharge for USDT settlement. 100% of the commitment is credited to principal upon closing.',
+        'Independent ledger verification: A compliance officer must independently verify on-chain block confirmations and sign off before final settlement receipt is issued.',
+      ],
+      noGuaranteeDisclosure: 'CRITICAL REGULATORY COMPLIANCE NOTICE: A blockchain transfer or USDT cryptocurrency transaction DOES NOT constitute a guarantee, promise, or warranty of loan approval. Loan decisions are strictly determined by formal Underwriting Committee assessment of applicant creditworthiness.',
+      independentVerificationRequired: true,
+    },
+  },
 };
 
 function readDB(): DBStructure {
@@ -186,7 +271,36 @@ function readDB(): DBStructure {
       return INITIAL_DB;
     }
     const raw = fs.readFileSync(DB_FILE, 'utf-8');
-    return JSON.parse(raw);
+    const parsed: DBStructure = JSON.parse(raw);
+    let dirty = false;
+    if (!parsed.paymentSettings || !parsed.paymentSettings.usdtConfig) {
+      parsed.paymentSettings = INITIAL_DB.paymentSettings;
+      dirty = true;
+    }
+    if (!parsed.applications) {
+      parsed.applications = INITIAL_DB.applications;
+      dirty = true;
+    }
+    // Ensure applications have referral structure if missing
+    parsed.applications = parsed.applications.map((app: any) => {
+      if (!app.referral) {
+        dirty = true;
+        const codeNum = app.id.replace('MFS-2026-', '');
+        return {
+          ...app,
+          referral: {
+            referralCode: `REF-${codeNum}`,
+            referredBy: app.id === 'MFS-2026-6281' ? 'REF-8194' : null,
+            referredAt: app.createdAt,
+          },
+        };
+      }
+      return app;
+    });
+    if (dirty) {
+      writeDB(parsed);
+    }
+    return parsed;
   } catch (err) {
     console.error('Failed to read database file, returning default:', err);
     return INITIAL_DB;
@@ -358,6 +472,94 @@ app.get('/api/email/status', (req, res) => {
   });
 });
 
+// Payment Settings Endpoints (Central Synchronized USDT Custody Rail)
+app.get('/api/payment-settings', (req, res) => {
+  const db = readDB();
+  res.json(db.paymentSettings || INITIAL_DB.paymentSettings);
+});
+
+app.put('/api/payment-settings', (req, res) => {
+  try {
+    const db = readDB();
+    const newSettings = req.body;
+    if (!newSettings || !newSettings.usdtConfig) {
+      return res.status(400).json({ error: 'Invalid payment settings format.' });
+    }
+    db.paymentSettings = {
+      ...newSettings,
+      updatedAt: new Date().toISOString(),
+      updatedBy: req.body.adminName || 'Authorized Administrator',
+    };
+    writeDB(db);
+    console.log('[Central Payment Settings Updated] Active Network:', db.paymentSettings.usdtConfig?.activeNetworkId);
+    res.json({ success: true, paymentSettings: db.paymentSettings });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/payment-settings/usdt-address', (req, res) => {
+  try {
+    const { networkId, depositAddress, setAsActive = true, adminName = 'Authorized Administrator' } = req.body;
+    if (!networkId || !depositAddress) {
+      return res.status(400).json({ error: 'networkId and depositAddress are required.' });
+    }
+    const db = readDB();
+    if (!db.paymentSettings) {
+      db.paymentSettings = JSON.parse(JSON.stringify(INITIAL_DB.paymentSettings));
+    }
+    const networks = db.paymentSettings.usdtConfig.supportedNetworks.map((net: any) => {
+      if (net.id === networkId) {
+        return { ...net, depositAddress: depositAddress.trim() };
+      }
+      return net;
+    });
+    db.paymentSettings.usdtConfig.supportedNetworks = networks;
+    if (setAsActive) {
+      db.paymentSettings.usdtConfig.activeNetworkId = networkId;
+    }
+    db.paymentSettings.updatedAt = new Date().toISOString();
+    db.paymentSettings.updatedBy = adminName;
+    writeDB(db);
+    console.log(`[USDT Address Updated] ${networkId}: ${depositAddress.trim()}`);
+    res.json({ success: true, paymentSettings: db.paymentSettings });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Referral Tracking API
+app.get('/api/referrals/:code', (req, res) => {
+  const code = req.params.code.trim().toUpperCase();
+  const db = readDB();
+  const apps = db.applications || [];
+  const referrer = apps.find((a: any) => 
+    a.referral?.referralCode?.toUpperCase() === code || 
+    a.id?.toUpperCase() === code ||
+    a.id?.toUpperCase().replace('MFS-2026-', 'REF-') === code
+  );
+  const referredUsers = apps.filter((a: any) => 
+    a.referral?.referredBy?.toUpperCase() === code ||
+    (referrer && a.referral?.referredBy?.toUpperCase() === referrer.id?.toUpperCase()) ||
+    (referrer && a.referral?.referredBy?.toUpperCase() === referrer.referral?.referralCode?.toUpperCase())
+  );
+  res.json({
+    valid: Boolean(referrer),
+    referrer: referrer ? {
+      name: referrer.personal?.fullName,
+      emailMasked: referrer.personal?.email ? referrer.personal.email.replace(/(.{2})(.*)(?=@)/, '$1***') : '',
+      referralCode: referrer.referral?.referralCode || `REF-${referrer.id.replace('MFS-2026-', '')}`,
+    } : null,
+    totalReferred: referredUsers.length,
+    referredAccounts: referredUsers.map((u: any) => ({
+      id: u.id,
+      fullName: u.personal?.fullName,
+      status: u.status,
+      createdAt: u.createdAt,
+    })),
+  });
+});
+
 // Dashboard Statistics (Requirement 3: Total registered users, new registrations, active users, suspended users, etc.)
 app.get('/api/stats', (req, res) => {
   const db = readDB();
@@ -368,19 +570,22 @@ app.get('/api/stats', (req, res) => {
   const activeUsers = apps.filter((a) => a.status === 'approved' || a.status === 'disbursed' || a.status === 'underwriting').length;
   const suspendedUsers = apps.filter((a) => a.status === 'declined').length;
   const docsNeeded = apps.filter((a) => a.status === 'documents_required').length;
+  const referredUsers = apps.filter((a) => Boolean(a.referral?.referredBy)).length;
   
   const totalRequestedVolume = apps.reduce((sum, a) => sum + (a.loan?.requestedAmount || 0), 0);
   const approvedVolume = apps
     .filter((a) => a.status === 'approved' || a.status === 'disbursed')
     .reduce((sum, a) => sum + (a.underwriting?.approvedAmount || a.loan?.requestedAmount || 0), 0);
 
-  const recentRegistrations = apps.slice(0, 5).map((a) => ({
+  const recentRegistrations = apps.slice(0, 8).map((a) => ({
     id: a.id,
     fullName: a.personal?.fullName,
     email: a.personal?.email,
     phoneNumber: a.personal?.phoneNumber,
     requestedAmount: a.loan?.requestedAmount,
     status: a.status,
+    referralCode: a.referral?.referralCode,
+    referredBy: a.referral?.referredBy,
     createdAt: a.createdAt,
   }));
 
@@ -390,6 +595,7 @@ app.get('/api/stats', (req, res) => {
     activeUsers,
     suspendedUsers,
     docsNeeded,
+    referredUsers,
     totalRequestedVolume,
     approvedVolume,
     recentRegistrations,
@@ -415,10 +621,10 @@ app.get('/api/applications/:id', (req, res) => {
   res.json(appItem);
 });
 
-// User Registration Endpoint (Requirement 1 & 2)
+// User Registration Endpoint (Requirement 1, 2, 4)
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { fullName, email, phoneNumber, password, desiredAmount, purpose } = req.body;
+    const { fullName, email, phoneNumber, password, desiredAmount, purpose, referredBy } = req.body;
 
     if (!fullName || !email) {
       return res.status(400).json({ error: 'Full legal name and email address are required.' });
@@ -440,6 +646,8 @@ app.post('/api/auth/register', async (req, res) => {
 
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const appId = `MFS-2026-${randomSuffix}`;
+    const referralCode = `REF-${randomSuffix}`;
+    const cleanReferredBy = referredBy ? String(referredBy).trim().toUpperCase() : null;
     const amount = Number(desiredAmount) || 100000;
     const earnestAmount = Math.round(amount * 0.1);
     const registrationDate = new Date().toISOString();
@@ -453,6 +661,11 @@ app.post('/api/auth/register', async (req, res) => {
       createdAt: registrationDate,
       updatedAt: registrationDate,
       status: 'pending_review',
+      referral: {
+        referralCode,
+        referredBy: cleanReferredBy,
+        referredAt: registrationDate,
+      },
       personal: {
         fullName: trimmedName,
         email: trimmedEmail,
@@ -568,6 +781,12 @@ app.post('/api/auth/register', async (req, res) => {
             <tr>
               <td style="padding: 8px 0; color: #64748b;">Registration Date:</td>
               <td style="padding: 8px 0; color: #0f172a;">${formattedDate}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #64748b;">Referral Account:</td>
+              <td style="padding: 8px 0; font-family: monospace; font-weight: 700; color: #4338ca;">
+                ${cleanReferredBy ? `Referred By: ${cleanReferredBy} (Assigned Link: ${referralCode})` : `Direct Registration (Assigned Link: ${referralCode})`}
+              </td>
             </tr>
           </table>
 
@@ -946,7 +1165,11 @@ async function startServer() {
   });
 }
 
-startServer().catch((err) => {
-  console.error('Fatal server startup failure:', err);
-  process.exit(1);
-});
+if (!process.env.VERCEL) {
+  startServer().catch((err) => {
+    console.error('Fatal server startup failure:', err);
+    process.exit(1);
+  });
+}
+
+export default app;

@@ -136,7 +136,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       loadData();
       const handleUpdate = () => loadData();
       window.addEventListener('verdant_storage_update', handleUpdate);
-      return () => window.removeEventListener('verdant_storage_update', handleUpdate);
+      
+      // Auto-poll central production database every 5 seconds so registrations from other phones/devices appear automatically
+      const pollTimer = setInterval(() => {
+        loadData();
+      }, 5000);
+
+      return () => {
+        window.removeEventListener('verdant_storage_update', handleUpdate);
+        clearInterval(pollTimer);
+      };
     }
   }, [isAuthenticated]);
 
@@ -226,13 +235,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   // Filter applications
   const filteredApps = applications.filter((app) => {
-    const matchesStatus = filterStatus === 'all' || app.status === filterStatus;
+    let matchesStatus = false;
+    if (filterStatus === 'all') matchesStatus = true;
+    else if (filterStatus === 'referred') matchesStatus = Boolean(app.referral?.referredBy);
+    else matchesStatus = app.status === filterStatus;
+
     const matchesSearch =
       searchQuery === '' ||
       app.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       app.personal.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       app.personal.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.loan.purpose.toLowerCase().includes(searchQuery.toLowerCase());
+      app.loan.purpose.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      Boolean(app.referral?.referralCode && app.referral.referralCode.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      Boolean(app.referral?.referredBy && app.referral.referredBy.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesStatus && matchesSearch;
   });
 
@@ -590,6 +605,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               {[
                 { key: 'all', label: `All Dossiers (${applications.length})` },
                 { key: 'pending_review', label: `★ New Registrations (${applications.filter(a => a.status === 'pending_review').length})`, highlight: true },
+                { key: 'referred', label: `Referral Accounts (${applications.filter(a => Boolean(a.referral?.referredBy)).length})` },
                 { key: 'underwriting', label: `Underwriting (${applications.filter(a => a.status === 'underwriting').length})` },
                 { key: 'documents_required', label: `Docs Needed (${applications.filter(a => a.status === 'documents_required').length})` },
                 { key: 'approved', label: `Approved (${applications.filter(a => a.status === 'approved' || a.status === 'disbursed').length})` },
@@ -624,6 +640,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <th className="py-3.5 px-4">Applicant</th>
                   <th className="py-3.5 px-4">Facility & Purpose</th>
                   <th className="py-3.5 px-4">Income & DTI</th>
+                  <th className="py-3.5 px-4">Referral Track</th>
                   <th className="py-3.5 px-4">Status</th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
@@ -631,7 +648,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <tbody className="divide-y divide-slate-100 text-slate-700">
                 {filteredApps.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                    <td colSpan={7} className="py-12 text-center text-slate-400">
                       No applications match the current query and filter.
                     </td>
                   </tr>
@@ -708,6 +725,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             dtiPct <= 35 ? 'text-emerald-700' : dtiPct <= 45 ? 'text-amber-700' : 'text-red-700'
                           }`}>
                             DTI: {dtiPct}% ({riskRating})
+                          </span>
+                        </td>
+
+                        <td className="py-3.5 px-4 font-mono">
+                          {app.referral?.referredBy ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
+                              Ref: {app.referral.referredBy}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 font-sans">Direct</span>
+                          )}
+                          <span className="block text-[9px] text-slate-400 font-mono mt-0.5">
+                            {app.referral?.referralCode || `REF-${app.id.replace('MFS-2026-', '')}`}
                           </span>
                         </td>
 
@@ -879,6 +909,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="text-right">
                   <span className="text-slate-400 uppercase text-[10px] block">Current Dossier Status</span>
                   <span className="text-sm font-bold text-slate-900 uppercase">{selectedApp.status.replace('_', ' ')}</span>
+                </div>
+              </div>
+
+              {/* Referral Attribution & Origin Card */}
+              <div className="p-4 bg-indigo-50/70 border border-indigo-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-mono font-bold text-xs shrink-0 shadow-sm">
+                    REF
+                  </div>
+                  <div>
+                    <span className="font-bold text-indigo-950 uppercase tracking-wider text-[11px] block">
+                      Referral Attribution & Tracking
+                    </span>
+                    <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-indigo-900">
+                      <span>Assigned Partner Link Code: <strong className="font-mono bg-white px-1.5 py-0.5 rounded border border-indigo-200">{selectedApp.referral?.referralCode || `REF-${selectedApp.id.replace('MFS-2026-', '')}`}</strong></span>
+                      <span>·</span>
+                      <span>Referred By: <strong className="font-mono bg-indigo-100 text-indigo-950 px-1.5 py-0.5 rounded">{selectedApp.referral?.referredBy || 'Direct Organic Registration'}</strong></span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right text-[11px] text-indigo-700 self-end sm:self-auto font-mono">
+                  {new Date(selectedApp.referral?.referredAt || selectedApp.createdAt).toLocaleDateString()}
                 </div>
               </div>
 
